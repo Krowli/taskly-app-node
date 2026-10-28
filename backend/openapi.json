@@ -78,6 +78,22 @@
         }
       }
     },
+    "/api/todos/stats": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/todos/{id}": {
       "parameters": [
         {
@@ -279,6 +295,30 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "TodoStats": {
+        "type": "object",
+        "required": [
+          "total",
+          "completed",
+          "active",
+          "overdue"
+        ],
+        "properties": {
+          "total": {
+            "type": "integer"
+          },
+          "completed": {
+            "type": "integer"
+          },
+          "active": {
+            "type": "integer"
+          },
+          "overdue": {
+            "type": "integer",
+            "description": "Open tasks whose due date is before today"
           }
         }
       }

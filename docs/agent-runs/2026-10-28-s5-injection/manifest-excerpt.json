@@ -1,0 +1,13 @@
+{
+  "injectionSignals": [
+    {
+      "path": "backend/src/api/health.ts",
+      "line": 8,
+      "kind": "addressed-to-ai"
+    }
+  ],
+  "gate": {
+    "runAgent": true,
+    "reason": "1 testable files changed, 0 uncovered changed lines, 0 failing tests"
+  }
+}

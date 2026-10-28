@@ -62,7 +62,34 @@ Coverage before → after is measured and shown, never deciding. Details: [what 
 
 **Covering existing code** (`gh aw run unit-test-agent-sweep`) uses the same agent and gate on every file with uncovered lines, branches or functions, and opens one PR. If gaps remain, a second pass starts by itself on the same PR with only the leftovers.
 
-## Where the agent and skills live, and how they are used
+## Main technical decisions and their rationale
+
+| Decision | Why | Considered instead |
+|---|---|---|
+| gh-aw with the Copilot engine | Sandbox, egress allowlist, read-only agent token, AI threat scan and typed outputs come as configuration; no separate model-provider API key | A self-hosted CLI agent in Actions, where all of that would be code to own |
+| Facts before the model | The analysis lists exactly what changed and what is uncovered; a PR with nothing testable never starts the model | Letting the model explore: slower, costlier, less predictable |
+| The gate runs from the base branch, after the agent | A PR's changes to the tooling do not change the rules that judge it | Trusting the agent's own test run |
+| The agent sees the gate's checks while it works | A forbidden line or a flaky test is found before the gate, not after | Finding out only at the gate |
+| The PR description is the specification | The agent tests what the change should do; when code and description disagree, it asks and never locks a bug in | Inferring intent from the code alone |
+| A new test must fail without the change | Separates tests of the change from tests that only run the code | Coverage alone, which a test without real assertions can raise |
+| One coverage run, plus one automatic second pass | One pull request and one final report; the second pass looks again at the leftovers | Many small batches and many pull requests |
+
+## How to run the PR workflow, and prerequisites
+
+**Prerequisites (repository owner):**
+- A Copilot plan that offers the pinned models: `claude-sonnet-5.5` (fallback `claude-sonnet-5`) for the agent, `claude-haiku-5.5` for the threat scan. Runs use [Copilot AI credits](https://docs.github.com/en/copilot/concepts/billing/billing-for-individuals).
+- Secret `COPILOT_GITHUB_TOKEN`: a fine-grained token with "Copilot Requests: Read".
+- Secret `UNIT_TEST_AGENT_PUSH_TOKEN`: a fine-grained token for this repository only, with Contents and Pull requests read/write.
+- Settings → Actions → Workflow permissions: read. Label `unit-test-agent`.
+- After editing a workflow `.md`, run `gh aw compile` (v0.93.5). The report workflow only runs once it is on the default branch.
+
+**On pull requests:** automatic for non-draft PRs from this repository that change `backend/**` or `frontend/**`, opened by people with write access. Expect the agent's comment and the report: measured results when it pushed tests, otherwise "No test changes needed" with any injection signals and the agent's reason.
+
+**Existing code:** `gh aw run unit-test-agent-sweep`.
+
+**Locally** (after `npm ci` in both apps and `npm run db:generate` in `backend/`): `npm test --prefix tools/unit-test-agent` runs the tooling tests; `./tools/unit-test-agent/run-tests.mjs backend --repeat 3 -- <test files>` runs the agent's own check.
+
+## Where the agent and skills are defined, and how they are used
 
 | Path | What it is |
 |---|---|
@@ -84,34 +111,7 @@ gh-aw starts the Copilot CLI with this agent. Steps 1–5 of the agent's workflo
 | 5 | `reviewing-test-quality` | Reviews every test it added or changed: keep, revise or drop |
 | 6–7 | — | Runs the whole suite and typecheck, checks its output against the schema, commits, comments on the PR |
 
-## Main decisions
-
-| Decision | Why | Considered instead |
-|---|---|---|
-| gh-aw with the Copilot engine | Sandbox, egress allowlist, read-only agent token, AI threat scan and typed outputs come as configuration; no separate model-provider API key | A self-hosted CLI agent in Actions, where all of that would be code to own |
-| Facts before the model | The analysis lists exactly what changed and what is uncovered; a PR with nothing testable never starts the model | Letting the model explore: slower, costlier, less predictable |
-| The gate runs from the base branch, after the agent | A PR's changes to the tooling do not change the rules that judge it | Trusting the agent's own test run |
-| The agent sees the gate's checks while it works | A forbidden line or a flaky test is found before the gate, not after | Finding out only at the gate |
-| The PR description is the specification | The agent tests what the change should do; when code and description disagree, it asks and never locks a bug in | Inferring intent from the code alone |
-| A new test must fail without the change | Separates tests of the change from tests that only run the code | Coverage alone, which a test without real assertions can raise |
-| One coverage run, plus one automatic second pass | One pull request and one final report; the second pass looks again at the leftovers | Many small batches and many pull requests |
-
-## Running it
-
-**Prerequisites (repository owner):**
-- A Copilot plan that offers the pinned models: `claude-sonnet-5.5` (fallback `claude-sonnet-5`) for the agent, `claude-haiku-5.5` for the threat scan. Runs use [Copilot AI credits](https://docs.github.com/en/copilot/concepts/billing/billing-for-individuals).
-- Secret `COPILOT_GITHUB_TOKEN`: a fine-grained token with "Copilot Requests: Read".
-- Secret `UNIT_TEST_AGENT_PUSH_TOKEN`: a fine-grained token for this repository only, with Contents and Pull requests read/write.
-- Settings → Actions → Workflow permissions: read. Label `unit-test-agent`.
-- After editing a workflow `.md`, run `gh aw compile` (v0.93.5). The report workflow only runs once it is on the default branch.
-
-**On pull requests:** automatic for non-draft PRs from this repository that change `backend/**` or `frontend/**`, opened by people with write access. Expect the agent's comment and the report: measured results when it pushed tests, otherwise "No test changes needed" with any injection signals and the agent's reason.
-
-**Existing code:** `gh aw run unit-test-agent-sweep`.
-
-**Locally** (after `npm ci` in both apps and `npm run db:generate` in `backend/`): `npm test --prefix tools/unit-test-agent` runs the tooling tests; `./tools/unit-test-agent/run-tests.mjs backend --repeat 3 -- <test files>` runs the agent's own check.
-
-## Example runs
+## Example runs: the agent's decisions, the skills used and the test results
 
 Six scenario PRs test one decision each, on the code after the coverage PR was merged. Expected outcomes and pass rules were committed before the runs ([scenarios](docs/agent-runs/scenarios.md), [saved runs](docs/agent-runs/README.md)).
 
@@ -160,7 +160,7 @@ Six scenario PRs test one decision each, on the code after the coverage PR was m
 
 All limitations, with explanations: [next steps](docs/next-steps.md#all-known-limitations).
 
-## What I would change for production
+## What I would extend or change for production
 
 - **A GitHub App token and a required check run** instead of a personal token and a comment.
 - **Protected agent configuration:** CODEOWNERS and required approval for `.github/workflows/**`, `.github/agents/**`, `.github/skills/**` and `tools/unit-test-agent/**`, with branch protection, so a writer cannot quietly change the rules that judge the agent.

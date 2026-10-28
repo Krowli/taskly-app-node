@@ -171,7 +171,7 @@
           },
           "description": {
             "type": "string",
-            "maxLength": 2000,
+            "maxLength": 1000,
             "default": ""
           },
           "priority": {
@@ -207,7 +207,7 @@
           },
           "description": {
             "type": "string",
-            "maxLength": 2000
+            "maxLength": 1000
           },
           "priority": {
             "type": "string",
@@ -247,7 +247,7 @@
           },
           "description": {
             "type": "string",
-            "maxLength": 2000,
+            "maxLength": 1000,
             "default": ""
           },
           "priority": {

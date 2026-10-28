@@ -225,10 +225,33 @@ Six scenario PRs test one decision each, on the code after the coverage PR was m
 | **The scenario set on every change** | Shows at once whether a change to the agent, a skill or the model made decisions worse | Re-run S1–S6 automatically and compare with the expected outcomes |
 | **A verdict per app** | Today one failing frontend test rejects the backend tests from the same run | Judge and publish backend and frontend patches separately |
 | **PRs from forks** | PR code runs in the agent job today | Move that step into a separate job with no secrets; delete agent instruction files a PR adds |
-| **The model by PR size** | Small diffs do not need the strongest model | Route small diffs to a smaller model, with one escalation after a weak result |
+| **The model by PR size** | Small diffs do not need the strongest model | Route small diffs to a smaller model, with one escalation after a weak result. See the cost estimate below |
 | **A file cap on very large PRs** | Keeps cost and time bounded | Largest changes first; the rest listed as follow-ups |
 | **An audit mode for existing tests** | A coverage run never revisits code that is already covered | An on-demand report of weak existing tests, as suggestions only |
 | **Dates under several time zones** | Logic based on the local date can break in other zones | Run date-related tests under several `TZ` values in the gate |
 | **CI hardening** | Cheap proof that the workflows are safe | `actionlint` and `zizmor` on workflows, a format check of agent tests in the gate, Dependabot with a cooldown for pinned actions |
 | **Organisation-billed model access** | Budgets per repository, no personal credentials | Organisation Copilot policy with per-repository budgets |
 | **One shared schema for limits** | The impact skill finds the same rule duplicated between backend, database, OpenAPI and frontend | Generate `openapi.json` and the frontend limits from the backend schema |
+
+### Cost on other models (estimate)
+
+All final runs together (coverage in two passes and S1–S6) used 71 K input, 96 K output, 6.8 M cache-read and 0.36 M cache-write tokens ([usage files](docs/agent-runs/README.md)). Priced at [Copilot's per-model rates](https://docs.github.com/en/enterprise-cloud@latest/copilot/reference/copilot-billing/models-and-pricing):
+
+| Model | Same tokens would cost | |
+|---|---|---|
+| Claude Sonnet 5.5 (used) | **$2.68** | measured |
+| GPT-6 Astra | $16.79 | ×6.3 |
+| GPT-6.1 Terra | $1.34 | ×0.5 |
+| Gemini 3.8 Flash | $1.19 | ×0.44 |
+| Claude Haiku 5.5 | $0.17–0.84 | ×0.06–0.31, depending on whether a request is over 100 K tokens |
+| GPT-6 Luna | $0.17 | ×0.06 |
+
+This is an assumption, not a result: it supposes another model needs the same number of tokens. A weaker model usually takes more turns, and a patch the gate rejects is paid for and wasted, so a cheaper model can end up costing more. 96 % of the tokens are cache reads, so the cache-read price matters most.
+
+**How to check a cheaper model before switching.** Change `model:` in both workflows, then re-run the coverage run and S1–S6 on a copy of this repository. Switch only if all of these hold:
+- all six scenarios still pass their pre-written rules;
+- coverage is no lower;
+- the planted-bug count and mutation scores ([quality](docs/agent-runs/quality.md)) are no lower;
+- the gate rejects no more runs.
+
+Compare the credits the runs actually used, not this estimate. A likely saving without risk: a small model for small PRs and for the threat scan (already the case), with the stronger one kept for coverage runs and large diffs.

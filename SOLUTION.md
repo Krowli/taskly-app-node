@@ -168,6 +168,12 @@ All limitations, with explanations: [next steps](docs/next-steps.md#all-known-li
 - **Mutation testing as feedback for the agent:** surviving mutants on changed files as targets, the score next to coverage.
 - **An independent reviewer** on a different model, applying the same checklist to the patch.
 - **The scenario set on every change** to the agent, a skill or the model, compared with the expected outcomes.
+- **Tests above the unit layer**, which catch problems at the seams that unit tests with mocks cannot see:
+  - integration tests of the API against a real database in a container (S3's `VARCHAR(120)` column next to a 200-character limit);
+  - a short Playwright E2E suite on the `docker compose` app for the key flows (create, edit, filter, overdue);
+  - a contract check: backend responses validated against `openapi.json`, frontend types generated from it (S4's drift).
+
+  Each gets its own skill, so the agent also creates and updates these tests for a change.
 - **A cheaper model for small PRs**, switched only after the scenario set and quality checks show no loss ([cost estimate](docs/next-steps.md#cost-on-other-models-estimate)).
 
 The full list, with why and how for each (also a verdict per app, fork PRs and an audit mode for existing tests): [next steps](docs/next-steps.md#all-production-changes).

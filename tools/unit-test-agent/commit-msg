@@ -1,0 +1,8 @@
+#!/bin/sh
+# git commit-msg hook, installed for the agent's sandbox by the unit-test-agent workflow.
+# Agent CLIs append attribution lines of the form "<Something>-by: <name>"; this repository
+# takes none, so every such line is removed whatever the agent writes.
+grep -v -i -E '^[a-z][a-z-]*-by:' "$1" | awk 'NF { for (; blank > 0; blank--) print ""; print; next } { blank++ }' > "$1.tmp"
+mv "$1.tmp" "$1"
+# Marks the agent's own commit so the workflow it triggers skips instead of running the agent again.
+grep -q '^Unit-Test-Agent-Run:' "$1" || printf '\nUnit-Test-Agent-Run: %s\n' "${GITHUB_RUN_ID:-local}" >> "$1"

@@ -1,0 +1,3 @@
+{ "testRunner": "vitest", "coverageAnalysis": "perTest", "concurrency": 4,
+  "mutate": ["src/**/*.ts", "!src/**/types.ts", "!src/generated/**"],
+  "reporters": ["clear-text", "json"], "jsonReporter": { "fileName": "reports/mutation.json" } }

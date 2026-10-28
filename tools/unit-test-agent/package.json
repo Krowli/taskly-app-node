@@ -1,0 +1,9 @@
+{
+  "name": "unit-test-agent-tools",
+  "private": true,
+  "description": "Deterministic tooling around the unit-test agent: change manifest, patch validation, verdict and PR comment.",
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "test": "node --test"
+  }
+}

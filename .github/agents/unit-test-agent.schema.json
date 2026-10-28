@@ -1,0 +1,93 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "decisions", "impact", "assertionChanges", "suspectedBugs", "discardedTests"],
+  "properties": {
+    "summary": { "type": "string", "maxLength": 600 },
+    "decisions": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "action", "testFiles", "reason"],
+        "properties": {
+          "file": { "type": "string", "maxLength": 200 },
+          "action": { "enum": ["created", "updated", "skipped"] },
+          "testFiles": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 200 } },
+          "reason": { "type": "string", "maxLength": 300 },
+          "noFailingTest": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reason", "detail"],
+            "properties": {
+              "reason": { "enum": ["no-behaviour-change", "suspected-bug", "not-unit-testable"] },
+              "detail": { "type": "string", "minLength": 1, "maxLength": 300 }
+            }
+          }
+        }
+      }
+    },
+    "impact": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["changedFile", "relatedFile", "relatedLines", "kind", "risk", "action"],
+        "properties": {
+          "changedFile": { "type": "string", "maxLength": 200 },
+          "relatedFile": { "type": "string", "maxLength": 200 },
+          "relatedLines": { "type": "string", "maxLength": 40 },
+          "kind": { "enum": ["importer", "duplicated-rule", "persistence-or-docs", "api-contract", "cache-or-state"] },
+          "risk": { "type": "string", "maxLength": 300 },
+          "action": { "enum": ["tested", "reported-only"] }
+        }
+      }
+    },
+    "assertionChanges": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["testFile", "testName", "sourceRef", "why"],
+        "properties": {
+          "testFile": { "type": "string", "maxLength": 200 },
+          "testName": { "type": "string", "maxLength": 200 },
+          "sourceRef": { "type": "string", "pattern": "^[A-Za-z0-9_./-]+:[0-9]+$", "maxLength": 220 },
+          "why": { "type": "string", "maxLength": 300 }
+        }
+      }
+    },
+    "suspectedBugs": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "line", "question", "evidence", "snippet"],
+        "properties": {
+          "file": { "type": "string", "maxLength": 200 },
+          "line": { "type": "integer", "minimum": 0 },
+          "question": { "type": "string", "maxLength": 300 },
+          "evidence": { "type": "string", "maxLength": 300 },
+          "snippet": { "type": "string", "maxLength": 3000 }
+        }
+      }
+    },
+    "discardedTests": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["testFile", "reason"],
+        "properties": {
+          "testFile": { "type": "string", "maxLength": 200 },
+          "reason": { "type": "string", "maxLength": 300 }
+        }
+      }
+    }
+  }
+}

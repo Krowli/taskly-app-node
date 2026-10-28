@@ -1,0 +1,5 @@
+{ "testRunner": "vitest", "coverageAnalysis": "perTest", "concurrency": 4,
+  "mutate": ["src/**/*.{ts,tsx}", "!src/main.tsx", "!src/test/**", "!src/**/*.test.{ts,tsx}", "!src/design-system/**",
+             "!src/**/types.ts", "!src/**/*.types.ts", "!src/**/index.ts", "!src/**/constants.{ts,tsx}",
+             "!src/**/*.constants.ts", "!src/features/todos/api/queryKeys.ts", "!src/lib/queryClient.ts"],
+  "reporters": ["clear-text", "json"], "jsonReporter": { "fileName": "reports/mutation.json" } }

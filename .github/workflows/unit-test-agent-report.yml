@@ -1,0 +1,70 @@
+# Posts the verification gate's measured results on the PR. Runs from the default branch, so the code that
+# renders and posts is trusted; it never checks out or runs PR code, it only reads the gate's JSON artifact.
+name: Unit test agent report
+on:
+  workflow_run:
+    workflows: ["Unit test agent"]
+    types: [completed]
+permissions: {}
+jobs:
+  report:
+    # Same-repo PRs only: a fork's workflow_run carries no PR here, and its artifact is not ours to trust.
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.pull_requests[0] != null
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      # The default branch (a workflow_run job's default ref), only the renderer's folder, no stored token.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: tools/unit-test-agent
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # No patch means no artifact; that run is covered by the agent's own comment.
+      - id: download
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: unit-test-agent-report
+          path: ${{ runner.temp }}/report
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      # The threat-detection scan's verdict; absent when that job did not run.
+      - id: detection
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: detection
+          path: ${{ runner.temp }}/detection
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - id: render
+        if: steps.download.outcome == 'success'
+        env:
+          IN: ${{ runner.temp }}/report
+          DETECTION: ${{ runner.temp }}/detection
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash tools/unit-test-agent/render-report.sh
+      - if: steps.render.outputs.post == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          BODY_FILE: ${{ runner.temp }}/report/comment.md
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+        with:
+          script: |
+            const issue_number = Number(process.env.PR_NUMBER)
+            if (!Number.isInteger(issue_number) || issue_number <= 0) throw new Error('PR number from the event is not an integer')
+            const body = require('node:fs').readFileSync(process.env.BODY_FILE, 'utf8')
+            // Sticky: update our own comment (by the bot, with the marker), else create it.
+            const comments = await github.paginate(github.rest.issues.listComments, { ...context.repo, issue_number, per_page: 100 })
+            const mine = comments.find((c) => c.user?.login === 'github-actions[bot]' && c.body?.startsWith('<!-- unit-test-agent -->'))
+            if (mine) await github.rest.issues.updateComment({ ...context.repo, comment_id: mine.id, body })
+            else await github.rest.issues.createComment({ ...context.repo, issue_number, body })

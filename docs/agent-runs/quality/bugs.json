@@ -1,0 +1,114 @@
+[
+  {
+    "id": "B1",
+    "file": "backend/src/features/todos/validators.ts",
+    "what": "Backend title limit 120 → 121 characters",
+    "original": "title: z.string().trim().min(1).max(120),",
+    "replacement": "title: z.string().trim().min(1).max(121),"
+  },
+  {
+    "id": "B2",
+    "file": "backend/src/features/todos/validators.ts",
+    "what": "Backend description limit 2000 → 2001",
+    "original": "description: z.string().trim().max(2000),",
+    "replacement": "description: z.string().trim().max(2001),"
+  },
+  {
+    "id": "B3",
+    "file": "backend/src/factory.ts",
+    "what": "Invalid JSON answered 400 instead of 422",
+    "original": "error.type === 'entity.parse.failed') return res.status(422)",
+    "replacement": "error.type === 'entity.parse.failed') return res.status(400)"
+  },
+  {
+    "id": "B4",
+    "file": "backend/src/core/lifespan.ts",
+    "what": "Shutdown timeout 10 s → 1 s",
+    "original": "setTimeout(() => process.exit(1), 10000)",
+    "replacement": "setTimeout(() => process.exit(1), 1000)"
+  },
+  {
+    "id": "B5",
+    "file": "backend/src/features/todos/router.ts",
+    "what": "Deleting a missing task answered 400 instead of 404",
+    "original": "if (!await repository.delete(Number(res.locals.todoId))) return res.status(404)",
+    "replacement": "if (!await repository.delete(Number(res.locals.todoId))) return res.status(400)"
+  },
+  {
+    "id": "B6",
+    "file": "backend/src/features/todos/repository.ts",
+    "what": "Task list sorted oldest first instead of newest first",
+    "original": "orderBy: [{ created_at: 'desc' }, { id: 'desc' }]",
+    "replacement": "orderBy: [{ created_at: 'asc' }, { id: 'desc' }]"
+  },
+  {
+    "id": "B7",
+    "file": "backend/src/features/todos/mappers.ts",
+    "what": "\"Created\" date filled from the \"updated\" date",
+    "original": "created_at: record.created_at.toISOString(),",
+    "replacement": "created_at: record.updated_at.toISOString(),"
+  },
+  {
+    "id": "B8",
+    "file": "backend/src/core/config.ts",
+    "what": "Database URL no longer converted for the driver",
+    "original": "return explicit.replace(/^postgresql\\+psycopg:/, 'postgresql:');",
+    "replacement": "return explicit;"
+  },
+  {
+    "id": "F1",
+    "file": "frontend/src/features/todos/utils/todos.ts",
+    "what": "Frontend title limit check 120 → 121",
+    "original": "input.title.trim().length > 120",
+    "replacement": "input.title.trim().length > 121"
+  },
+  {
+    "id": "F2",
+    "file": "frontend/src/features/todos/utils/todos.ts",
+    "what": "Frontend description limit rejects exactly 2000",
+    "original": "input.description.trim().length > 2000",
+    "replacement": "input.description.trim().length >= 2000"
+  },
+  {
+    "id": "F3",
+    "file": "frontend/src/features/todos/utils/todos.ts",
+    "what": "High and medium priority order swapped",
+    "original": "{ high: 0, medium: 1, low: 2 }",
+    "replacement": "{ high: 1, medium: 0, low: 2 }"
+  },
+  {
+    "id": "F4",
+    "file": "frontend/src/features/todos/utils/todos.ts",
+    "what": "A task due today counted as overdue during the day",
+    "original": "todo.due_date < localDate",
+    "replacement": "todo.due_date <= localDate"
+  },
+  {
+    "id": "F5",
+    "file": "frontend/src/lib/http.ts",
+    "what": "The server's error message replaced by a generic one",
+    "original": "typeof body?.detail === 'string'",
+    "replacement": "false"
+  },
+  {
+    "id": "F6",
+    "file": "frontend/src/features/todos/hooks/useCreateTodoMutation.ts",
+    "what": "A created task not added to the list until reload",
+    "original": "        saved,\n        ...current.filter((todo) => todo.id !== saved.id),\n",
+    "replacement": "        ...current,\n"
+  },
+  {
+    "id": "F7",
+    "file": "frontend/src/features/todos/components/TodoItem.tsx",
+    "what": "\"Completed\" / \"To do\" labels swapped",
+    "original": "{todo.completed ? 'Completed' : 'To do'}",
+    "replacement": "{todo.completed ? 'To do' : 'Completed'}"
+  },
+  {
+    "id": "F8",
+    "file": "frontend/src/features/todos/utils/todos.ts",
+    "what": "\"Completed\" / \"Active\" filters swapped",
+    "original": "(filter === 'completed' ? todo.completed : !todo.completed)",
+    "replacement": "(filter === 'completed' ? !todo.completed : todo.completed)"
+  }
+]

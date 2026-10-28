@@ -94,15 +94,19 @@ export const NO_FAILING_TEST_REASONS = ['no-behaviour-change', 'suspected-bug', 
 // PR mode: when the PR modifies existing testable source, at least one test in the agent's test files
 // must fail with that source restored to the base (measure.sh), unless the agent declared an exception
 // (decision.noFailingTest) for every such file. Exceptions are agent claims: accepted, but always listed.
-export function failsWithoutChange(manifest, pinsChange, decisions) {
+// `measured` is fails-without-change.json; the result holds its counts and the rule's outcome.
+export function failsWithoutChange(manifest, measured, decisions) {
   const modified = manifest?.mode === 'pr' ? (manifest.files ?? []).filter((file) => file.testable && file.status === 'M').map((file) => file.path) : []
   const exceptions = (Array.isArray(decisions) ? decisions : [])
     .filter((d) => typeof d?.file === 'string' && NO_FAILING_TEST_REASONS.includes(d.noFailingTest?.reason) && typeof d.noFailingTest.detail === 'string' && d.noFailingTest.detail.trim())
     .map(({ file, noFailingTest: { reason, detail } }) => ({ file, reason, detail }))
-  const failing = Number(pinsChange?.failingOnBase) || 0
+  const failing = Number(measured?.failingOnBase) || 0
   const unexcepted = modified.filter((path) => !exceptions.some((e) => e.file === path))
   const required = modified.length > 0
-  return { required, met: !required || failing > 0 || !unexcepted.length, failing, total: Number(pinsChange?.newTests) || 0, exceptions, unexcepted }
+  return {
+    applicable: measured?.applicable === true, failing, total: Number(measured?.newTests) || 0,
+    required, met: !required || failing > 0 || !unexcepted.length, exceptions, unexcepted,
+  }
 }
 
 export function buildReport(inputs) {
@@ -137,8 +141,7 @@ export function buildReport(inputs) {
     return [app, { passed, failed, total }]
   }))
   verification.requireAssertions = inputs.requireAssertions
-  verification.pinsChange = inputs.pinsChange ?? { applicable: false, newTests: 0, failingOnBase: 0 }
-  verification.failsWithoutChange = failsWithoutChange(manifest, verification.pinsChange, agent.decisions)
+  verification.failsWithoutChange = failsWithoutChange(manifest, inputs.failsWithoutChange, agent.decisions)
   const stabilityRuns = inputs.stabilityRuns ?? []
   const flaky = [...new Set(stabilityRuns.flatMap((run) => parseVitestJson(run, repoRoot).failures.map((f) => `${f.file} › ${f.name}`)))]
   const runsPerApp = Object.values(Object.groupBy(stabilityRuns, (run) => APPS.find((app) => run.testResults?.[0]?.name?.includes(`/${app}/`)) ?? 'unknown'))
@@ -161,7 +164,7 @@ export function buildReport(inputs) {
     ...(stabilityRuns.length ? [] : ['stability runs']),
   ]
   // A measurement input that could not be read is a problem, not a silently smaller set of runs.
-  const unreadable = inputErrors.filter((e) => /^(results-|stability-|typecheck-|require-assertions|pins-change|coverage-after)/.test(e))
+  const unreadable = inputErrors.filter((e) => /^(results-|stability-|typecheck-|require-assertions|fails-without-change|coverage-after)/.test(e))
   const problems = [
     ...(unreadable.length ? [`unreadable measurements: ${unreadable.join(', ')}`] : []),
     ...(missing.length ? [`missing measurements: ${missing.join(', ')}`] : []),
@@ -206,7 +209,7 @@ function main() {
   const { values } = parseArgs({
     options: Object.fromEntries([
       ...['manifest', 'manifest-after', 'agent-output', 'execution-file', 'usage', 'patch-validation', 'typecheck-backend', 'typecheck-frontend',
-        'results-backend', 'results-frontend', 'require-assertions', 'pins-change', 'coverage-after-root', 'verdict-hint', 'reason',
+        'results-backend', 'results-frontend', 'require-assertions', 'fails-without-change', 'coverage-after-root', 'verdict-hint', 'reason',
         'run-url', 'pr', 'head-sha', 'out'].map((name) => [name, { type: 'string' }]),
       ['stability', { type: 'string', multiple: true }],
     ]),
@@ -235,7 +238,7 @@ function main() {
     results: { backend: read('results-backend'), frontend: read('results-frontend') },
     stabilityRuns: (values.stability ?? []).map((path) => readJson(path, inputErrors, `stability-${basename(path)}`)).filter(Boolean),
     requireAssertions: values['require-assertions'],
-    pinsChange: read('pins-change'),
+    failsWithoutChange: read('fails-without-change'),
     coverageAfter,
     inputErrors,
     verdictHint: values['verdict-hint'],

@@ -44,7 +44,7 @@ function inputs(overrides = {}) {
     results: { backend: green, frontend: green },
     stabilityRuns: [green, green, green, green],
     requireAssertions: 'pass',
-    pinsChange: { applicable: true, newTests: 3, failingOnBase: 2 },
+    failsWithoutChange: { applicable: true, newTests: 3, failingOnBase: 2 },
     coverageAfter: { backend: { lines: 50 }, frontend: { lines: 47.68 } },
     ...overrides,
   }
@@ -235,30 +235,32 @@ const exception = (file, reason = 'no-behaviour-change', detail = 'only renames 
 const withDecisions = (decisions) => ({ decisions, impact: [], assertionChanges: [], suspectedBugs: [], discardedTests: [] })
 
 test('PR mode: a modified source file needs at least one agent test that fails without the change', () => {
-  const report = buildReport(inputs({ manifest: prManifest, pinsChange: { applicable: true, newTests: 7, failingOnBase: 0 } }))
+  const report = buildReport(inputs({ manifest: prManifest, failsWithoutChange: { applicable: true, newTests: 7, failingOnBase: 0 } }))
   assert.equal(report.verdict, 'failed')
   assert.match(report.reason, /no agent test fails without the change/)
   assert.deepEqual(report.verification.failsWithoutChange, {
-    required: true, met: false, failing: 0, total: 7, exceptions: [], unexcepted: ['backend/src/factory.ts', 'backend/src/router.ts'],
+    applicable: true, failing: 0, total: 7, required: true, met: false, exceptions: [], unexcepted: ['backend/src/factory.ts', 'backend/src/router.ts'],
   })
-  const pinned = buildReport(inputs({ manifest: prManifest, pinsChange: { applicable: true, newTests: 7, failingOnBase: 3 } }))
+  const pinned = buildReport(inputs({ manifest: prManifest, failsWithoutChange: { applicable: true, newTests: 7, failingOnBase: 3 } }))
   assert.equal(pinned.verdict, 'ready', pinned.reason)
   assert.equal(pinned.verification.failsWithoutChange.met, true)
 })
 
-test('PR mode: missing pins-change measurements count as no failing test', () => {
-  assert.equal(buildReport(inputs({ manifest: prManifest, pinsChange: undefined })).verdict, 'failed')
+test('PR mode: missing fails-without-change measurements count as no failing test', () => {
+  const report = buildReport(inputs({ manifest: prManifest, failsWithoutChange: undefined }))
+  assert.equal(report.verdict, 'failed')
+  assert.deepEqual([report.verification.failsWithoutChange.applicable, report.verification.failsWithoutChange.total], [false, 0])
 })
 
 test('an exception for every modified source file is accepted and listed; one missing still fails', () => {
   const zero = { applicable: true, newTests: 7, failingOnBase: 0 }
-  const all = buildReport(inputs({ manifest: prManifest, pinsChange: zero, agentOutput: withDecisions([exception('backend/src/factory.ts'), exception('backend/src/router.ts', 'not-unit-testable', 'starts the server')]) }))
+  const all = buildReport(inputs({ manifest: prManifest, failsWithoutChange: zero, agentOutput: withDecisions([exception('backend/src/factory.ts'), exception('backend/src/router.ts', 'not-unit-testable', 'starts the server')]) }))
   assert.equal(all.verdict, 'ready', all.reason)
   assert.deepEqual(all.verification.failsWithoutChange.exceptions, [
     { file: 'backend/src/factory.ts', reason: 'no-behaviour-change', detail: 'only renames a local variable' },
     { file: 'backend/src/router.ts', reason: 'not-unit-testable', detail: 'starts the server' },
   ])
-  const one = buildReport(inputs({ manifest: prManifest, pinsChange: zero, agentOutput: withDecisions([exception('backend/src/factory.ts')]) }))
+  const one = buildReport(inputs({ manifest: prManifest, failsWithoutChange: zero, agentOutput: withDecisions([exception('backend/src/factory.ts')]) }))
   assert.equal(one.verdict, 'failed')
   assert.deepEqual(one.verification.failsWithoutChange.unexcepted, ['backend/src/router.ts'])
 })
@@ -271,7 +273,7 @@ test('an exception needs a known reason and a detail, and only counts for the fi
     [{ ...exception('backend/src/factory.ts'), noFailingTest: 'no-behaviour-change' }, exception('backend/src/router.ts')],
     [exception('backend/src/new.ts'), exception('backend/src/router.ts')],
   ]) {
-    assert.equal(buildReport(inputs({ manifest: prManifest, pinsChange: zero, agentOutput: withDecisions(bad) })).verdict, 'failed', JSON.stringify(bad[0]))
+    assert.equal(buildReport(inputs({ manifest: prManifest, failsWithoutChange: zero, agentOutput: withDecisions(bad) })).verdict, 'failed', JSON.stringify(bad[0]))
   }
 })
 
@@ -285,7 +287,7 @@ test('not required in coverage mode or when the PR only adds source files', () =
   const zero = { applicable: false, newTests: 0, failingOnBase: 0 }
   const onlyAdded = { ...prManifest, files: prManifest.files.filter((file) => file.status === 'A') }
   for (const m of [{ ...prManifest, mode: 'coverage' }, onlyAdded]) {
-    const report = buildReport(inputs({ manifest: m, pinsChange: zero }))
+    const report = buildReport(inputs({ manifest: m, failsWithoutChange: zero }))
     assert.equal(report.verdict, 'ready', report.reason)
     assert.equal(report.verification.failsWithoutChange.required, false)
   }

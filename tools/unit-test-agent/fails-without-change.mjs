@@ -1,17 +1,17 @@
-// "Pins the change": the agent's tests were re-run with the PR's modified source
-// files reverted to the merge base (pins-<app>.json, Vitest JSON). Tests that now
+// "Fails without the change": the agent's tests were re-run with the PR's modified source
+// files reverted to the merge base (fails-without-change-<app>.json, Vitest JSON). Tests that now
 // fail are the ones that check the new behaviour.
-// Usage: node pins-change.mjs <dir>  → writes <dir>/pins-change.json
+// Usage: node fails-without-change.mjs <dir>  → writes <dir>/fails-without-change.json
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-export function summarizePins(dir) {
+export function summarizeFailsWithoutChange(dir) {
   let applicable = false
   let newTests = 0
   let failingOnBase = 0
   for (const app of ['backend', 'frontend']) {
-    const path = join(dir, `pins-${app}.json`)
+    const path = join(dir, `fails-without-change-${app}.json`)
     if (!existsSync(path)) continue
     const report = JSON.parse(readFileSync(path, 'utf8'))
     applicable = true
@@ -23,5 +23,5 @@ export function summarizePins(dir) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  writeFileSync(join(process.argv[2], 'pins-change.json'), JSON.stringify(summarizePins(process.argv[2])))
+  writeFileSync(join(process.argv[2], 'fails-without-change.json'), JSON.stringify(summarizeFailsWithoutChange(process.argv[2])))
 }

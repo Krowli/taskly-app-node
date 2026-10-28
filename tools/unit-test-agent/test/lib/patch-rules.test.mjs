@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { classify, isAllowedTestPath, forbiddenAddedLine } from '../../lib/paths.mjs'
+import { classify, isAllowedTestPath, forbiddenAddedLine } from '../../lib/patch-rules.mjs'
 
 test('forbids expected-to-fail tests and snapshot assertions', () => {
   assert.equal(forbiddenAddedLine("it.fails('x', () => {})"), 'expected-to-fail test')

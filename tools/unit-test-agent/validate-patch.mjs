@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 import { pathToFileURL } from 'node:url'
-import { forbiddenAddedLine, isAllowedTestPath, isRunnableTest } from './lib/paths.mjs'
+import { forbiddenAddedLine, isAllowedTestPath, isRunnableTest } from './lib/patch-rules.mjs'
 
 const MAX_BYTES = 300 * 1024
 const MAX_FILES = 30

@@ -44,7 +44,7 @@ if [ "${#hint[@]}" -eq 0 ] && [ -f "$m/typecheck-backend" ]; then
   stability=(); for f in "$m"/stability/*.json; do [ -f "$f" ] && stability+=(--stability "$f"); done
   args+=(--typecheck-backend "$(cat "$m/typecheck-backend")" --typecheck-frontend "$(cat "$m/typecheck-frontend")"
          --results-backend "$m/results-backend.json" --results-frontend "$m/results-frontend.json"
-         "${stability[@]}" --require-assertions "$(cat "$m/require-assertions")" --pins-change "$m/pins-change.json"
+         "${stability[@]}" --require-assertions "$(cat "$m/require-assertions")" --fails-without-change "$m/fails-without-change.json"
          --coverage-after-root "$m/coverage" --manifest-after "$m/manifest-after.json")
 fi
 

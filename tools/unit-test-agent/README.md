@@ -48,7 +48,7 @@ flowchart LR
 |---|---|---|
 | `change-manifest.mjs` | What changed, which changed lines no test covers, existing tests, importers, where old values still appear, the gate | agent job (analyse step), gate |
 | `validate-patch.mjs` | Only test files; no forbidden or weakening patterns in added lines; an existing test file may only gain new test cases, any other change to it or to an existing helper must cite a changed source line (PR mode, never in coverage mode); see [Patch checks](#patch-checks) | gate, `judge.sh`, `run-tests.mjs` |
-| `pins-change.mjs` | How many tests in the agent's test files fail with the PR's modified source files reverted | `measure.sh` |
+| `fails-without-change.mjs` | How many tests in the agent's test files fail with the PR's modified source files reverted (`fails-without-change.json`) | `measure.sh` |
 | `build-report.mjs` | Verdict from measurements only; in PR mode it fails unless a test in the agent's test files fails without the change or every modified source file has a declared exception (always listed); agent-run facts (AI credits, model, skills used, own test runs) are shown but never decide | `judge.sh` |
 | `render-comment.mjs` | Sticky PR comment: measured facts first, agent claims sanitised and labelled | report workflow, sweep report job |
 | `gate.sh` | Validate, install, apply, measure without network on throwaway copies of the checkout, judge; `MODE=pr` or `coverage` | threat-detection job |
@@ -58,8 +58,8 @@ flowchart LR
 | `previous-pass.mjs` | A sweep's second pass: the first pass's reasons for files still uncovered, as plain-text notes for the agent | sweep agent job (analyse step) |
 | `run-tests.mjs` | The agent's way to run tests: Vitest (and `tsc`) for one app, Prettier for new frontend test files | the agent (base commit's copy in `.unit-test-agent/bin/`) |
 | `commit-msg` | Git hook that adds the `Unit-Test-Agent-Run` trailer to the agent's commit (loop guard, report) | agent job |
-| `save-evidence.sh` | `<run-id> <slug>`: saves a run's report, claims, usage and links under `docs/agent-runs/` | run by hand |
-| `lib/` | diff parsing, import graph, coverage, Vitest JSON, path policy | — |
+| `save-evidence.sh` | `<run-id> <slug>`: saves a run's report, claims, usage and links under `docs/agent-runs/`; a run without a patch: gh-aw's safe outputs, usage, the analysis' injection signals and gate, and links. Repository: `GH_REPO`, else the checkout's | run by hand |
+| `lib/` | diff parsing, import graph, coverage, Vitest JSON, allowed test paths, patch rules (`patch-rules.mjs`) | — |
 | `test/` | Tests for everything here | CI `tooling` job |
 
 The allowed test paths have one source: [`lib/test-paths.mjs`](lib/test-paths.mjs), shared by
@@ -91,7 +91,7 @@ files alone. Coverage percentages are for the files included in each app's Vites
 `validate-patch.mjs` reads test code with line-based heuristics, not a parser: string, template, regex and
 comment text is blanked, then brackets are matched.
 
-- Every added line: the forbidden patterns in [`lib/paths.mjs`](lib/paths.mjs) (focused or skipped tests,
+- Every added line: the forbidden patterns in [`lib/patch-rules.mjs`](lib/patch-rules.mjs) (focused or skipped tests,
   snapshots, network, environment, empty `catch` or `.catch(() => {})`, `expect.assertions(0)` and others).
 - Every test with added lines: a `return` before its last assertion, and assertions that all sit inside
   `if`/`else`/`switch`/`catch` or after a braceless `if`.

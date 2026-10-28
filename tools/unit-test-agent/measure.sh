@@ -39,8 +39,8 @@ for app in backend frontend; do
   (cd "$app" && ./node_modules/.bin/vitest run --sequence.shuffle.files --sequence.shuffle.tests --reporter=json --outputFile="$OUT/stability/$app-shuffled.json") || true
 done
 
-# Pins the change: the PR's modified source files go back to the merge base and the patched tests run again.
-echo '{"applicable":false,"newTests":0,"failingOnBase":0}' > "$OUT/pins-change.json"
+# Fails without the change: the PR's modified source files go back to the merge base and the patched tests run again.
+echo '{"applicable":false,"newTests":0,"failingOnBase":0}' > "$OUT/fails-without-change.json"
 if [ "$MODE" = pr ]; then
   mapfile -t modified < <(node -e 'for (const f of require(process.argv[1]).files) if (f.testable && f.status === "M") console.log(f.path)' "$IN/analysis/.unit-test-agent/manifest.json")
   if [ "${#modified[@]}" -gt 0 ]; then
@@ -48,10 +48,10 @@ if [ "$MODE" = pr ]; then
     for app in backend frontend; do
       mapfile -t files < <(patched "$app")
       [ "${#files[@]}" -eq 0 ] && continue
-      (cd "$app" && ./node_modules/.bin/vitest run "${files[@]}" --reporter=json --outputFile="$OUT/pins-$app.json") || true
+      (cd "$app" && ./node_modules/.bin/vitest run "${files[@]}" --reporter=json --outputFile="$OUT/fails-without-change-$app.json") || true
     done
     git checkout HEAD -- "${modified[@]}"
-    node "$here/pins-change.mjs" "$OUT"
+    node "$here/fails-without-change.mjs" "$OUT"
   fi
   node "$here/change-manifest.mjs" --mode pr --base "$BASE" --head "$HEAD_SHA" --out "$OUT/manifest-after.json"
 fi

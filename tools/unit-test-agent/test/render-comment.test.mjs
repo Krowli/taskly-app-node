@@ -22,8 +22,7 @@ const report = {
     typecheck: { backend: 'pass', frontend: 'pass' },
     tests: { backend: { passed: 60, failed: 0, total: 60 }, frontend: { passed: 18, failed: 0, total: 18 } },
     requireAssertions: 'pass',
-    pinsChange: { applicable: true, newTests: 6, failingOnBase: 4 },
-    failsWithoutChange: { required: true, met: true, failing: 4, total: 6, exceptions: [], unexcepted: [] },
+    failsWithoutChange: { applicable: true, failing: 4, total: 6, required: true, met: true, exceptions: [], unexcepted: [] },
     stability: { runs: 5, shuffled: true, flaky: [] },
     coverage: {
       before: { backend: { lines: 33.02, branches: 20, functions: 30, statements: 31 }, frontend: { lines: 47.68, branches: 40, functions: 50, statements: 47 } },
@@ -252,8 +251,8 @@ test('lists every declared exception, cleaned like other agent text, and marks a
 })
 
 test('shows no fails-without-the-change row when it is not required', () => {
-  const failsWithoutChange = { required: false, met: true, failing: 0, total: 0, exceptions: [], unexcepted: [] }
-  const body = renderComment({ ...report, verification: { ...report.verification, pinsChange: { applicable: false, newTests: 0, failingOnBase: 0 }, failsWithoutChange } })
+  const failsWithoutChange = { applicable: false, failing: 0, total: 0, required: false, met: true, exceptions: [], unexcepted: [] }
+  const body = renderComment({ ...report, verification: { ...report.verification, failsWithoutChange } })
   assert.doesNotMatch(body, /Fails without the change|Exceptions/)
 })
 

@@ -83,14 +83,14 @@ function measured(report, firstReport) {
   if (v.stability) {
     rows.push(['Stability', `${v.stability.runs} runs${v.stability.shuffled ? ' incl. shuffled order' : ''}, ${v.stability.flaky.length} flaky ${ok(!v.stability.flaky.length)}${v.stability.flaky.length ? `: ${v.stability.flaky.slice(0, 5).map((x) => clean(x, 150)).join('; ')}` : ''}`])
   }
-  const pins = v.failsWithoutChange
-  if (pins?.required) {
-    const counted = `${Number(pins.failing) || 0} of ${Number(pins.total) || 0} tests in the agent's test files fail on the PR's base source`
-    const missing = (Array.isArray(pins.unexcepted) ? pins.unexcepted : []).slice(0, 5).map((file) => `\`${clean(file, 120)}\``).join(', ')
-    rows.push(['Fails without the change', !pins.met ? `required ❌: ${counted}; no exception for ${missing}`
-      : Number(pins.failing) > 0 ? `${counted} ✅` : `${counted}; accepted: every modified source file has an exception ⚠️`])
+  const failsWithoutChange = v.failsWithoutChange
+  if (failsWithoutChange?.required) {
+    const counted = `${Number(failsWithoutChange.failing) || 0} of ${Number(failsWithoutChange.total) || 0} tests in the agent's test files fail on the PR's base source`
+    const missing = (Array.isArray(failsWithoutChange.unexcepted) ? failsWithoutChange.unexcepted : []).slice(0, 5).map((file) => `\`${clean(file, 120)}\``).join(', ')
+    rows.push(['Fails without the change', !failsWithoutChange.met ? `required ❌: ${counted}; no exception for ${missing}`
+      : Number(failsWithoutChange.failing) > 0 ? `${counted} ✅` : `${counted}; accepted: every modified source file has an exception ⚠️`])
   }
-  const exceptions = Array.isArray(pins?.exceptions) ? pins.exceptions : []
+  const exceptions = Array.isArray(failsWithoutChange?.exceptions) ? failsWithoutChange.exceptions : []
   if (exceptions.length) {
     rows.push(['Exceptions (agent-declared)', exceptions.slice(0, 10).map((e) => `\`${clean(e.file, 120)}\` — ${clean(e.reason, 30)} — ${clean(e.detail, 200)}`).join('; ')])
   }
@@ -219,8 +219,8 @@ export function fromOriginalCode(first, second) {
 // Tests accepted only through agent-declared exceptions are published, but the headline asks a person to look.
 function headline(report) {
   const text = HEADLINES[report.verdict] ?? clean(report.verdict, 30)
-  const pins = report.verification?.failsWithoutChange
-  const viaExceptions = pins?.required && pins.met && !(Number(pins.failing) > 0) && Array.isArray(pins.exceptions) && pins.exceptions.length > 0
+  const failsWithoutChange = report.verification?.failsWithoutChange
+  const viaExceptions = failsWithoutChange?.required && failsWithoutChange.met && !(Number(failsWithoutChange.failing) > 0) && Array.isArray(failsWithoutChange.exceptions) && failsWithoutChange.exceptions.length > 0
   return viaExceptions && ['pushed', 'ready'].includes(report.verdict) ? `${text.replace(/^✅/, '⚠️')} — agent-declared exceptions need a human look` : text
 }
 

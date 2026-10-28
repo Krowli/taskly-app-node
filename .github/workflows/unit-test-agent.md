@@ -64,7 +64,7 @@ steps:
       # so a pull request cannot change the tool the agent checks its own tests with.
       mkdir -p .unit-test-agent/bin/lib
       install -m 755 "$RUNNER_TEMP/trusted/tools/unit-test-agent/run-tests.mjs" .unit-test-agent/bin/run-tests.mjs
-      cp "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/test-paths.mjs" "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/coverage.mjs" "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/paths.mjs" "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/without-change.mjs" "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/check-output.mjs" .unit-test-agent/bin/lib/
+      cp "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/test-paths.mjs" "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/coverage.mjs" "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/patch-rules.mjs" "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/without-change.mjs" "$RUNNER_TEMP/trusted/tools/unit-test-agent/lib/check-output.mjs" .unit-test-agent/bin/lib/
       # With the schema its --check-output reads, from the same commit.
       cp "$RUNNER_TEMP/trusted/tools/unit-test-agent/validate-patch.mjs" "$RUNNER_TEMP/trusted/.github/agents/unit-test-agent.schema.json" .unit-test-agent/bin/
       install -m 755 "$RUNNER_TEMP/trusted/tools/unit-test-agent/commit-msg" "$(git rev-parse --git-path hooks)/commit-msg"

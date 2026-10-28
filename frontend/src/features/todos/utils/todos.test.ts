@@ -177,3 +177,20 @@ describe('formatDate', () => {
     expect(formatDate('2026-12-31')).toBe('31 Dec 2026')
   })
 })
+
+describe('selectTodos due-date comparison', () => {
+  const at = (id: number, due_date: string | null): Todo => ({
+    ...base,
+    id,
+    due_date,
+  })
+
+  it.each([
+    ['dated first', [at(1, '2026-10-01'), at(2, null)]],
+    ['undated first', [at(2, null), at(1, '2026-10-01')]],
+  ])('puts the undated task last when %s', (_name, todos) => {
+    expect(selectTodos(todos, 'all', '', 'due').map((t) => t.id)).toEqual([
+      1, 2,
+    ])
+  })
+})

@@ -275,6 +275,21 @@ it('confirms deletion of the chosen task and notifies', async () => {
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 })
 
+it('treats a query without data as an empty list', () => {
+  arrange({ pending: true })
+  vi.mocked(useTodosQuery).mockReturnValue({
+    data: undefined,
+    isPending: true,
+    isFetching: true,
+    isError: false,
+    error: null,
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof useTodosQuery>)
+  render(<TodosPage />)
+  expect(screen.getByText(/hasTodos=false/)).toBeVisible()
+  expect(vi.mocked(useTodoFilters)).toHaveBeenCalledWith([])
+})
+
 it('closes the delete dialog without notifying when cancelled', async () => {
   const user = userEvent.setup()
   arrange()

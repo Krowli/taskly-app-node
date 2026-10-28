@@ -141,20 +141,20 @@ function measured(report, firstReport) {
   return ['#### Measured by the workflow', '', '| Check | Result |', '|---|---|', ...rows.map(([k, val]) => `| ${k} | ${val} |`), ''].join('\n')
 }
 
-function reported(agent) {
-  if (!agent) return ''
+function reported(agent, noopReason) {
   const out = ['#### Agent-reported (not verified)', '']
-  if (agent.decisions?.length) {
+  if (noopReason) out.push(`**No-op reason:** ${clean(noopReason, 500)}`, '')
+  if (agent?.decisions?.length) {
     out.push('**Decisions**', '', '| File | Action | Tests | Reason |', '|---|---|---|---|')
     for (const d of agent.decisions) out.push(`| \`${clean(d.file, 120)}\` | ${clean(d.action, 20)} | ${(d.testFiles ?? []).map((f) => `\`${clean(f, 120)}\``).join('<br>') || '—'} | ${clean(d.reason)} |`)
     out.push('')
   }
-  if (agent.impact?.length) {
+  if (agent?.impact?.length) {
     out.push('**Impact outside the diff**', '')
     for (const i of agent.impact) out.push(`- \`${clean(i.changedFile, 120)}\` → \`${clean(i.relatedFile, 120)}${i.relatedLines ? `:${clean(i.relatedLines, 20)}` : ''}\` (${clean(i.kind, 30)}, ${clean(i.action, 20)}): ${clean(i.risk)}`)
     out.push('')
   }
-  if (agent.suspectedBugs?.length) {
+  if (agent?.suspectedBugs?.length) {
     out.push('**Is this intended?**', '')
     for (const bug of agent.suspectedBugs.slice(0, 3)) {
       out.push(`- ${clean(bug.question)} (\`${clean(bug.file, 120)}:${Number(bug.line) || '?'}\`) — ${clean(bug.evidence)}`)
@@ -162,7 +162,7 @@ function reported(agent) {
     }
     out.push('')
   }
-  if (agent.discardedTests?.length) {
+  if (agent?.discardedTests?.length) {
     out.push('**Discarded tests**', '')
     for (const t of agent.discardedTests) out.push(`- \`${clean(t.testFile, 120)}\`: ${clean(t.reason)}`)
     out.push('')
@@ -183,6 +183,17 @@ export function applyPublishOutcome(report, { result, superseded, commitSha, sta
   if (superseded === 'true') return { ...report, verdict: 'superseded', reason: 'The PR changed while the agent worked; the newer run reports.' }
   if (result === 'success' && commitSha) return { ...report, verdict: 'pushed', commitSha }
   return { ...report, verdict: 'failed', reason: `Verified, but publishing failed (${result || 'not run'}).` }
+}
+
+// A run without a patch has no gate report. When the model ran, the comment is built from the analysis manifest
+// (uploaded before the model started: the facts) and the agent's no-op message (its claim). Null means post nothing:
+// the analysis ended the run before any model call, a push means the gate reports, or an input is missing or malformed.
+export function noPatchReport(manifest, agentOutput) {
+  if (manifest?.gate?.runAgent !== true || !Array.isArray(manifest.injectionSignals) || !Array.isArray(agentOutput?.items)) return null
+  if (agentOutput.items.some((item) => item?.type === 'push_to_pull_request_branch')) return null
+  const noop = agentOutput.items.find((item) => item?.type === 'noop')
+  if (typeof noop?.message !== 'string' || !noop.message.trim()) return null
+  return { verdict: 'no-changes', reason: 'The agent ran and pushed no tests.', injectionSignals: manifest.injectionSignals, noopReason: noop.message }
 }
 
 // Coverage left after the agent: "<app> <metric> <pct>%" for every line, branch or function metric below 100.
@@ -216,7 +227,7 @@ function headline(report) {
 export function renderComment(report, { maxLength = MAX_BODY, firstRunUrl, firstReport } = {}) {
   const parts = [MARKER, `### Unit test agent — ${headline(report)}`, '', clean(report.reason, 500), '']
   if (firstRunUrl) parts.push(`Two passes: [first run](${firstRunUrl}), [second run](${report.runUrl}). Coverage runs from the code before the first pass.`, '')
-  if (!['skipped', 'superseded'].includes(report.verdict)) parts.push(measured(report, firstReport), reported(report.agent))
+  if (!['skipped', 'superseded'].includes(report.verdict)) parts.push(measured(report, firstReport), reported(report.agent, report.noopReason))
   const footer = [`[Workflow run](${report.runUrl})`]
   if (report.verdict === 'pushed' && report.commitSha) {
     footer.push(`Tests pushed in ${report.commitSha}. CI runs on it automatically.`)
@@ -230,14 +241,23 @@ export function renderComment(report, { maxLength = MAX_BODY, firstRunUrl, first
 
 // Usage: node render-comment.mjs <report.json> [--run-url u --publish-status unknown --publish-result r --superseded true|false --commit-sha s --threat-flags prompt_injection,secret_leak]
 //   [--first-report first-pass/report.json --first-run-url u] [--out comment.md]
+// A run without a patch: node render-comment.mjs --manifest manifest.json --agent-output agent_output.json --run-url u [--out comment.md];
+//   exits 1 and writes nothing when there is no comment to post (see noPatchReport).
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
-    options: { 'publish-result': { type: 'string' }, 'run-url': { type: 'string' }, 'publish-status': { type: 'string' }, superseded: { type: 'string' }, 'commit-sha': { type: 'string' }, 'threat-flags': { type: 'string' }, 'first-report': { type: 'string' }, 'first-run-url': { type: 'string' }, out: { type: 'string' } },
+    options: { 'publish-result': { type: 'string' }, 'run-url': { type: 'string' }, 'publish-status': { type: 'string' }, superseded: { type: 'string' }, 'commit-sha': { type: 'string' }, 'threat-flags': { type: 'string' }, 'first-report': { type: 'string' }, 'first-run-url': { type: 'string' }, manifest: { type: 'string' }, 'agent-output': { type: 'string' }, out: { type: 'string' } },
   })
-  let report = applyPublishOutcome(JSON.parse(readFileSync(positionals[0], 'utf8')), {
-    result: values['publish-result'], superseded: values.superseded, commitSha: values['commit-sha'], status: values['publish-status'], threatFlags: (values['threat-flags'] ?? '').split(','),
-  })
+  const readOrNull = (path) => { try { return JSON.parse(readFileSync(path, 'utf8')) } catch { return null } }
+  let report = values.manifest
+    ? noPatchReport(readOrNull(values.manifest), readOrNull(values['agent-output'] ?? ''))
+    : applyPublishOutcome(JSON.parse(readFileSync(positionals[0], 'utf8')), {
+      result: values['publish-result'], superseded: values.superseded, commitSha: values['commit-sha'], status: values['publish-status'], threatFlags: (values['threat-flags'] ?? '').split(','),
+    })
+  if (!report) {
+    console.error('No comment: the model never started, the agent pushed a patch, or the analysis or the agent output is missing or malformed.')
+    process.exit(1)
+  }
   // The link comes from the workflow event, not from the artifact.
   if (values['run-url']) report.runUrl = values['run-url']
   const first = values['first-report'] ? JSON.parse(readFileSync(values['first-report'], 'utf8')) : null

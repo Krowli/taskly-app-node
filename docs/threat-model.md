@@ -13,7 +13,7 @@ Here every job has at most two.
 | `detection`, gate step | Yes: the agent's patch and tests | No: the step gets no secret, and the gate unsets the OTLP variables | No |
 | `detection`, AI threat scan | Yes: the patch, read as text | The Copilot token | No |
 | `safe_outputs` | Only output that has already passed the gate; no code from the PR runs | The push token | Yes, but only test paths (`allowed-files`, `protected-files: blocked`) |
-| Report (`workflow_run`, default branch) | Only the gate's report, rendered as data | `GITHUB_TOKEN` (`pull-requests: write`) | A PR comment only |
+| Report (`workflow_run`, default branch) | The gate's report, or for a run without a patch the analysis manifest and the agent's no-op reason, rendered as data | `GITHUB_TOKEN` (`pull-requests: write`) | A PR comment only |
 
 | Threat | Mitigation | Enforced in |
 |---|---|---|

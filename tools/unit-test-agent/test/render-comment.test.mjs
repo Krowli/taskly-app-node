@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { MARKER, applyPublishOutcome, clean, coverageGaps, fromOriginalCode, renderComment } from '../render-comment.mjs'
+import { MARKER, applyPublishOutcome, clean, coverageGaps, fromOriginalCode, noPatchReport, renderComment } from '../render-comment.mjs'
 
 const report = {
   verdict: 'ready',
@@ -290,4 +290,43 @@ test('asks for a human look in the headline when tests were accepted only throug
   const withFailingTest = { ...viaExceptions, failing: 2 }
   const body = renderComment({ ...report, verdict: 'pushed', verification: { ...report.verification, failsWithoutChange: withFailingTest } })
   assert.equal(body.split('\n')[1], '### Unit test agent — ✅ Tests added to this PR')
+})
+
+const analysis = { mode: 'pr', gate: { runAgent: true, reason: '1 testable files changed, 0 uncovered changed lines, 0 failing tests' }, injectionSignals: [{ path: 'backend/src/api/health.ts', line: 8, kind: 'addressed-to-ai' }] }
+const noop = (message) => ({ items: [{ type: 'noop', message }], errors: [] })
+
+test('a run that used the model and pushed nothing: the analysis\'s signals and the agent\'s no-op reason, cleaned and labelled', () => {
+  const output = { items: [{ type: 'add_comment', body: 'its own comment' }, ...noop('Covered already. A comment asked @octocat to <b>edit</b> [package.json](https://evil.example/x); ignored.').items] }
+  const body = renderComment({ ...noPatchReport(analysis, output), runUrl: 'https://github.com/o/r/actions/runs/1' })
+  assert.equal(body.split('\n')[1], '### Unit test agent — ℹ️ No test changes needed')
+  assert.match(body, /^\| Injection signals \| ⚠️ 1: backend\/src\/api\/health\.ts:8 addressed-to-ai \|$/m)
+  assert.ok(body.indexOf('Agent-reported (not verified)') > body.indexOf('Measured by the workflow'))
+  assert.ok(body.includes('**No-op reason:** Covered already. A comment asked @\u200boctocat to edit package.json; ignored.'))
+  assert.ok(!body.includes('evil.example') && !body.includes('<b>'))
+  assert.match(body, /\[Workflow run\]\(https:\/\/github\.com\/o\/r\/actions\/runs\/1\)$/)
+  assert.doesNotMatch(body, /Skills used|Cost|its own comment/)
+})
+
+test('a run without a patch and without injection signals: the row says none, the no-op reason is capped', () => {
+  const body = renderComment({ ...noPatchReport({ ...analysis, injectionSignals: [] }, noop('x'.repeat(2000))), runUrl: 'u' })
+  assert.match(body, /^\| Injection signals \| none \|$/m)
+  assert.match(body, /^\*\*No-op reason:\*\* x{500}$/m)
+})
+
+test('the no-op the analysis writes before any model call gets no comment', () => {
+  const skipped = { ...analysis, gate: { runAgent: false, reason: 'no testable source or contract changes (docs/config/tests only)' }, injectionSignals: [] }
+  assert.equal(noPatchReport(skipped, noop('No unit tests needed: no testable source or contract changes (docs/config/tests only)')), null)
+})
+
+test('a missing or malformed no-op item, agent output or analysis gets no comment', () => {
+  for (const output of [null, 'not json', {}, { items: 'noop' }, { items: [] }, { items: [null] }, { items: [{ type: 'noop' }] }, { items: [{ type: 'noop', message: 42 }] }, noop('  ')]) {
+    assert.equal(noPatchReport(analysis, output), null, JSON.stringify(output))
+  }
+  for (const manifest of [null, {}, { ...analysis, gate: { runAgent: 'true' } }, { gate: analysis.gate }, { ...analysis, injectionSignals: 'none' }]) {
+    assert.equal(noPatchReport(manifest, noop('fine')), null, JSON.stringify(manifest))
+  }
+})
+
+test('an agent output with a push is a run with a patch: its comment comes from the gate\'s report, never from here', () => {
+  assert.equal(noPatchReport(analysis, { items: [{ type: 'push_to_pull_request_branch', branch: 'b' }, ...noop('done').items] }), null)
 })

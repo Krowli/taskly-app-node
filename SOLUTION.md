@@ -130,7 +130,7 @@ flowchart LR
 - Label `unit-test-agent`.
 - After editing a workflow `.md`, run `gh aw compile` (v0.93.5). The report workflow (`workflow_run`) only runs once it is on the default branch.
 
-**On pull requests:** runs automatically for non-draft PRs from this repository that change `backend/**` or `frontend/**`, opened by people with write access. To check the setup, change one line of a function in `backend/src`. Expect the agent's comment and, when it pushed tests, the measured report.
+**On pull requests:** runs automatically for non-draft PRs from this repository that change `backend/**` or `frontend/**`, opened by people with write access. To check the setup, change one line of a function in `backend/src`. Expect the agent's comment and the report: measured results when it pushed tests; otherwise, if the model ran, "No test changes needed" with the injection signals and the agent's no-op reason.
 
 **Existing code:** `gh aw run unit-test-agent-sweep` covers both apps and opens one pull request. If gaps remain, a second pass starts by itself.
 

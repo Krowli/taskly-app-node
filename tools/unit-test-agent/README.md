@@ -17,7 +17,7 @@ skills in [`.github/skills/`](../../.github/skills); how it all fits together is
 | `gate.sh` | Validate, install, apply, measure without network on throwaway copies of the checkout, judge; `MODE=pr` or `coverage` | threat-detection job |
 | `measure.sh` | Measures only; runs in the network-less container; see [What the gate runs](#what-the-gate-runs) | gate |
 | `judge.sh` | Decides from validation and measurements (plus the session log and usage the gate copied); no PR or agent code | gate |
-| `render-report.sh` | Render the comment from the gate's report artifact; reads the publish outcome and the pushed commit from the GitHub API | report workflow, sweep report job |
+| `render-report.sh` | Render the comment from the gate's report artifact; reads the publish outcome and the pushed commit from the GitHub API. A PR run that used the model and pushed nothing has no report: the comment then shows the analysis artifact's injection signals and the agent's no-op reason | report workflow, sweep report job |
 | `previous-pass.mjs` | A sweep's second pass: the first pass's reasons for files still uncovered, as plain-text notes for the agent | sweep agent job (analyse step) |
 | `run-tests.mjs` | The agent's way to run tests: Vitest (and `tsc`) for one app, Prettier for new frontend test files | the agent (base commit's copy in `.unit-test-agent/bin/`) |
 | `commit-msg` | Git hook that adds the `Unit-Test-Agent-Run` trailer to the agent's commit (loop guard, report) | agent job |

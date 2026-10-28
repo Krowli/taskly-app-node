@@ -79,6 +79,14 @@ steps:
         mkdir -p "$(dirname "$out")"
         node -e 'const m = require("./.unit-test-agent/manifest.json"); process.stdout.write(JSON.stringify({ type: "noop", message: `No unit tests needed: ${m.gate.reason}` }) + "\n")' >> "$out"
       fi
+  # Uploaded before the model starts, so the agent cannot change it. A run without a patch has no gate report:
+  # the report workflow takes the injection signals, and whether the model ran, from this file.
+  - name: Upload the analysis
+    uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+    with:
+      name: unit-test-agent-analysis
+      path: .unit-test-agent/manifest.json
+      retention-days: 7
 post-steps:
   - name: Stage the agent's claims (untrusted)
     if: always()

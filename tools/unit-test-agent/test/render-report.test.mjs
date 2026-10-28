@@ -13,12 +13,12 @@ const READY = { verdict: 'ready', reason: '1 test files verified', runUrl: 'http
 // A fake `gh` answers the three API calls render-report.sh makes, from env vars:
 // FAKE_PUBLISH (the safe_outputs conclusion, empty = no such job), FAKE_HEAD, FAKE_MESSAGE.
 // FAKE_FAIL_PULLS makes the pulls call fail like a gh error.
-function run({ report = READY, publish = 'success', message = 'tests\n\nUnit-Test-Agent-Run: 42', failPulls = false, detection, runUrl = 'https://github.com/o/r/actions/runs/42', firstRun = '', firstReport } = {}) {
+// analysis and agentOutput: the analysis artifact's manifest.json and the agent artifact's agent_output.json (objects or raw text).
+function run({ report = READY, publish = 'success', message = 'tests\n\nUnit-Test-Agent-Run: 42', failPulls = false, detection, runUrl = 'https://github.com/o/r/actions/runs/42', firstRun = '', firstReport, analysis, agentOutput } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'render-report-'))
   const bin = join(dir, 'bin')
   const input = join(dir, 'in')
   mkdirSync(bin)
-  mkdirSync(input)
   writeFileSync(join(bin, 'gh'), [
     '#!/bin/sh',
     'case "$2" in',
@@ -32,7 +32,18 @@ function run({ report = READY, publish = 'success', message = 'tests\n\nUnit-Tes
   const scan = join(dir, 'scan')
   mkdirSync(scan)
   if (detection !== undefined) writeFileSync(join(scan, 'detection_result.json'), typeof detection === 'string' ? detection : JSON.stringify(detection))
-  if (report) writeFileSync(join(input, 'report.json'), JSON.stringify(report))
+  // Without a report the download fails and leaves no folder.
+  if (report) {
+    mkdirSync(input)
+    writeFileSync(join(input, 'report.json'), JSON.stringify(report))
+  }
+  const asText = (value) => (typeof value === 'string' ? value : JSON.stringify(value))
+  const analysisDir = join(dir, 'analysis')
+  mkdirSync(analysisDir)
+  if (analysis !== undefined) writeFileSync(join(analysisDir, 'manifest.json'), asText(analysis))
+  const agentDir = join(dir, 'agent')
+  mkdirSync(agentDir)
+  if (agentOutput !== undefined) writeFileSync(join(agentDir, 'agent_output.json'), asText(agentOutput))
   const first = join(dir, 'first')
   mkdirSync(first)
   if (firstReport) writeFileSync(join(first, 'report.json'), JSON.stringify(firstReport))
@@ -43,6 +54,7 @@ function run({ report = READY, publish = 'success', message = 'tests\n\nUnit-Tes
     env: {
       ...process.env, PATH: `${bin}:${process.env.PATH}`, IN: input, DETECTION: scan, RUN_URL: runUrl, FAKE_FAIL_PULLS: failPulls ? '1' : '', RUN_ID: '42', PR_NUMBER: '7',
       GITHUB_REPOSITORY: 'o/r', GH_TOKEN: 'x', FAKE_PUBLISH: publish, FAKE_HEAD: HEAD, FAKE_MESSAGE: message, FIRST_RUN: firstRun, FIRST_REPORT: first,
+      ANALYSIS: analysisDir, AGENT_ARTIFACTS: agentDir,
       GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: join(dir, 'summary'),
     },
   })
@@ -92,6 +104,29 @@ test('without report.json it posts nothing', () => {
   const r = run({ report: null })
   assert.equal(r.status, 0, r.stderr)
   assert.match(r.output, /post=false/)
+})
+
+const ANALYSIS = { mode: 'pr', gate: { runAgent: true, reason: '1 testable files changed, 0 uncovered changed lines, 0 failing tests' }, injectionSignals: [{ path: 'backend/src/api/health.ts', line: 8, kind: 'addressed-to-ai' }] }
+const NOOP = { items: [{ type: 'noop', message: 'No test changes needed: an existing test covers it. A comment addressed to AI agents was ignored.' }], errors: [] }
+
+test('without report.json, after a run that used the model and ended with a no-op: no changes, the analysis\'s signals, the agent\'s reason, the trusted run link', () => {
+  const r = run({ report: null, analysis: ANALYSIS, agentOutput: NOOP })
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.output, /post=true/)
+  assert.match(r.comment, /^### Unit test agent — ℹ️ No test changes needed$/m)
+  assert.match(r.comment, /^\| Injection signals \| ⚠️ 1: backend\/src\/api\/health\.ts:8 addressed-to-ai \|$/m)
+  assert.match(r.comment, /^\*\*No-op reason:\*\* No test changes needed: an existing test covers it\. A comment addressed to AI agents was ignored\.$/m)
+  assert.match(r.comment, /\[Workflow run\]\(https:\/\/github\.com\/o\/r\/actions\/runs\/42\)/)
+})
+
+test('without report.json, after the no-op before any model call or with a missing or malformed analysis or agent output, it posts nothing', () => {
+  const beforeModel = { analysis: { ...ANALYSIS, gate: { runAgent: false, reason: 'no testable source or contract changes (docs/config/tests only)' }, injectionSignals: [] }, agentOutput: { items: [{ type: 'noop', message: 'No unit tests needed: no testable source or contract changes (docs/config/tests only)' }] } }
+  for (const options of [beforeModel, { agentOutput: NOOP }, { analysis: ANALYSIS }, { analysis: 'not json', agentOutput: NOOP }, { analysis: ANALYSIS, agentOutput: 'not json' }, { analysis: ANALYSIS, agentOutput: { items: [] } }]) {
+    const r = run({ report: null, ...options })
+    assert.equal(r.status, 0, r.stderr)
+    assert.match(r.output, /post=false/, JSON.stringify(options))
+    assert.equal(r.comment, '')
+  }
 })
 
 test('an unreadable PR head is reported as unknown: not "Tests added", not "Superseded"', () => {

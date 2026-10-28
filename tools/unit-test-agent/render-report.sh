@@ -3,6 +3,7 @@
 # branch and reads GitHub only through the API; it never touches PR code.
 # Env: IN (downloaded artifact, holds report.json), RUN_URL, RUN_ID, PR_NUMBER, GH_TOKEN, GITHUB_REPOSITORY.
 # Optional: DETECTION (downloaded threat-scan artifact, holds detection_result.json);
+#   ANALYSIS and AGENT_ARTIFACTS (a run without a patch: the downloaded analysis artifact, holds manifest.json, and agent artifacts, hold agent_output.json);
 #   FIRST_RUN and FIRST_REPORT (a second pass on the same PR: the first run's id and its downloaded report artifact).
 # Outputs: post (true when comment.md was written), gaps (coverage still below 100% after the agent, empty if none).
 set -euo pipefail
@@ -10,10 +11,18 @@ set -euo pipefail
 : "${RUN_URL:?RUN_URL is required}"
 here=$(cd "$(dirname "$0")" && pwd)
 
-# Runs without a patch have no report; the agent's own comment covers them.
+# Runs without a patch have no report. If the model ran, the comment shows the analysis' injection signals and the
+# agent's no-op message; render-comment.mjs writes nothing when the model never started or an input is missing or malformed.
 if [ ! -f "$IN/report.json" ]; then
-  echo "post=false" >> "${GITHUB_OUTPUT:-/dev/null}"
-  echo "No report.json in the artifact; nothing to post." >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+  mkdir -p "$IN"
+  if [ -n "${ANALYSIS:-}" ] && [ -n "${AGENT_ARTIFACTS:-}" ] && node "$here/render-comment.mjs" --manifest "$ANALYSIS/manifest.json" \
+    --agent-output "$AGENT_ARTIFACTS/agent_output.json" --run-url "$RUN_URL" --out "$IN/comment.md"; then
+    cat "$IN/comment.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+    echo "post=true" >> "${GITHUB_OUTPUT:-/dev/null}"
+  else
+    echo "post=false" >> "${GITHUB_OUTPUT:-/dev/null}"
+    echo "No report.json and no comment for a run without a patch; nothing to post." >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+  fi
   exit 0
 fi
 

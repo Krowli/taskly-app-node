@@ -1,0 +1,45 @@
+== planted bugs, original tests (21ade40)
+| Bug | What was broken | Result |
+|---|---|---|
+| B1 | Backend title limit 120 → 121 characters | caught |
+| B2 | Backend description limit 2000 → 2001 | caught |
+| B3 | Invalid JSON answered 400 instead of 422 | missed |
+| B4 | Shutdown timeout 10 s → 1 s | missed |
+| B5 | Deleting a missing task answered 400 instead of 404 | missed |
+| B6 | Task list sorted oldest first instead of newest first | caught |
+| B7 | "Created" date filled from the "updated" date | missed |
+| B8 | Database URL no longer converted for the driver | missed |
+| F1 | Frontend title limit check 120 → 121 | missed |
+| F2 | Frontend description limit rejects exactly 2000 | missed |
+| F3 | High and medium priority order swapped | caught |
+| F4 | A task due today counted as overdue during the day | missed |
+| F5 | The server's error message replaced by a generic one | missed |
+| F6 | A created task not added to the list until reload | missed |
+| F7 | "Completed" / "To do" labels swapped | caught |
+| F8 | "Completed" / "Active" filters swapped | caught |
+Caught 6 of 16 (commit 21ade40)
+== planted bugs, agent tests (a15d883)
+| Bug | What was broken | Result |
+|---|---|---|
+| B1 | Backend title limit 120 → 121 characters | caught |
+| B2 | Backend description limit 2000 → 2001 | caught |
+| B3 | Invalid JSON answered 400 instead of 422 | caught |
+| B4 | Shutdown timeout 10 s → 1 s | caught |
+| B5 | Deleting a missing task answered 400 instead of 404 | caught |
+| B6 | Task list sorted oldest first instead of newest first | caught |
+| B7 | "Created" date filled from the "updated" date | missed |
+| B8 | Database URL no longer converted for the driver | caught |
+| F1 | Frontend title limit check 120 → 121 | caught |
+| F2 | Frontend description limit rejects exactly 2000 | caught |
+| F3 | High and medium priority order swapped | caught |
+| F4 | A task due today counted as overdue during the day | caught |
+| F5 | The server's error message replaced by a generic one | caught |
+| F6 | A created task not added to the list until reload | caught |
+| F7 | "Completed" / "To do" labels swapped | caught |
+| F8 | "Completed" / "Active" filters swapped | caught |
+Caught 15 of 16 (commit a15d883)
+== mutation, agent tests (a15d883)
+
+== mutation (Stryker 10.1.1, `mutation.sh`), "total" score = detected / all valid mutants
+original tests (21ade40): backend 31.20 % (73 killed, 15 survived, 146 no coverage, 1 error), 13 s; frontend 28.99 % (129 killed, 99 survived, 217 no coverage), 47 s
+agent tests (a15d883):    backend 84.26 % (198 killed, 37 survived, 0 no coverage), 42 s; frontend 89.44 % (398 killed, 47 survived, 0 no coverage), 88 s

@@ -1,0 +1,290 @@
+{
+ "backend": {
+  "commit": "a15d883",
+  "stryker": "10.1.1",
+  "score": 84.26,
+  "killed": 198,
+  "timeout": 0,
+  "survived": 37,
+  "noCoverage": 0,
+  "errors": 0,
+  "files": {
+   "src/api/health.ts": {
+    "killed": 8,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/core/config.ts": {
+    "killed": 20,
+    "timeout": 0,
+    "survived": 4,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 83.3
+   },
+   "src/core/database.ts": {
+    "killed": 4,
+    "timeout": 0,
+    "survived": 1,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 80.0
+   },
+   "src/core/lifespan.ts": {
+    "killed": 21,
+    "timeout": 0,
+    "survived": 2,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 91.3
+   },
+   "src/factory.ts": {
+    "killed": 41,
+    "timeout": 0,
+    "survived": 15,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 73.2
+   },
+   "src/features/todos/mappers.ts": {
+    "killed": 5,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/features/todos/repository.ts": {
+    "killed": 38,
+    "timeout": 0,
+    "survived": 3,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 92.7
+   },
+   "src/features/todos/router.ts": {
+    "killed": 38,
+    "timeout": 0,
+    "survived": 7,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 84.4
+   },
+   "src/features/todos/validators.ts": {
+    "killed": 21,
+    "timeout": 0,
+    "survived": 5,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 80.8
+   },
+   "src/main.ts": {
+    "killed": 2,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   }
+  }
+ },
+ "frontend": {
+  "commit": "a15d883",
+  "stryker": "10.1.1",
+  "score": 89.44,
+  "killed": 398,
+  "timeout": 0,
+  "survived": 47,
+  "noCoverage": 0,
+  "errors": 0,
+  "files": {
+   "src/App.tsx": {
+    "killed": 1,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/app/AppProviders.tsx": {
+    "killed": 1,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/components/ApplicationHeader.tsx": {
+    "killed": 1,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/components/SuccessNotice.tsx": {
+    "killed": 4,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/features/todos/TodosPage.tsx": {
+    "killed": 46,
+    "timeout": 0,
+    "survived": 2,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 95.8
+   },
+   "src/features/todos/api/todos.ts": {
+    "killed": 18,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/features/todos/components/DeleteTodoDialog.tsx": {
+    "killed": 14,
+    "timeout": 0,
+    "survived": 1,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 93.3
+   },
+   "src/features/todos/components/TodoEditor.tsx": {
+    "killed": 29,
+    "timeout": 0,
+    "survived": 6,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 82.9
+   },
+   "src/features/todos/components/TodoEmptyState.tsx": {
+    "killed": 7,
+    "timeout": 0,
+    "survived": 2,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 77.8
+   },
+   "src/features/todos/components/TodoFilters.tsx": {
+    "killed": 10,
+    "timeout": 0,
+    "survived": 14,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 41.7
+   },
+   "src/features/todos/components/TodoForm.tsx": {
+    "killed": 36,
+    "timeout": 0,
+    "survived": 3,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 92.3
+   },
+   "src/features/todos/components/TodoItem.tsx": {
+    "killed": 16,
+    "timeout": 0,
+    "survived": 6,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 72.7
+   },
+   "src/features/todos/components/TodoList.tsx": {
+    "killed": 9,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/features/todos/components/TodosHeader.tsx": {
+    "killed": 1,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/features/todos/hooks/useCreateTodoMutation.ts": {
+    "killed": 13,
+    "timeout": 0,
+    "survived": 1,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 92.9
+   },
+   "src/features/todos/hooks/useDeleteTodoMutation.ts": {
+    "killed": 12,
+    "timeout": 0,
+    "survived": 1,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 92.3
+   },
+   "src/features/todos/hooks/useTodoFilters.ts": {
+    "killed": 5,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/features/todos/hooks/useTodosBusy.ts": {
+    "killed": 5,
+    "timeout": 0,
+    "survived": 1,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 83.3
+   },
+   "src/features/todos/hooks/useTodosQuery.ts": {
+    "killed": 3,
+    "timeout": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 100.0
+   },
+   "src/features/todos/hooks/useUpdateTodoMutation.ts": {
+    "killed": 11,
+    "timeout": 0,
+    "survived": 1,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 91.7
+   },
+   "src/features/todos/utils/todos.ts": {
+    "killed": 114,
+    "timeout": 0,
+    "survived": 5,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 95.8
+   },
+   "src/hooks/useNotice.ts": {
+    "killed": 13,
+    "timeout": 0,
+    "survived": 2,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 86.7
+   },
+   "src/lib/http.ts": {
+    "killed": 29,
+    "timeout": 0,
+    "survived": 2,
+    "noCoverage": 0,
+    "errors": 0,
+    "score": 93.5
+   }
+  }
+ }
+}

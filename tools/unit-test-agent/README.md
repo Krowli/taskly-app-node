@@ -5,6 +5,43 @@ from, checks what the agent produced, decides, and renders the PR report. Node
 built-ins only, no install step. The agent lives in [`.github/agents/`](../../.github/agents) and its
 skills in [`.github/skills/`](../../.github/skills); how it all fits together is in [`SOLUTION.md`](../../SOLUTION.md).
 
+## How a run flows
+
+The model proposes and deterministic code decides. A run passes through three zones; no zone holds untrusted input, a secret and write access at the same time.
+
+```mermaid
+flowchart LR
+  PR([Pull request]) --> A
+  subgraph Z1["1 · Prepare — no model"]
+    A[Analysis by the base branch's tooling:<br/>changed lines not yet covered, importers,<br/>failing tests, injection signals]
+  end
+  A -->|nothing testable| N([No-op: the model never starts])
+  A --> B
+  subgraph Z2["2 · Agent sandbox — read-only token, egress allowlist"]
+    B[Copilot agent + 6 skills<br/>checks its tests with the gate's rules,<br/>without the change, and in shuffled repeats]
+  end
+  B -->|commit as a bundle| C
+  subgraph Z3["3 · Trusted judges — fail closed"]
+    C{Gate: base-branch tooling,<br/>tests in docker --network=none<br/>+ AI threat scan}
+    C -->|pass| D[Publish: test files only]
+    C -->|fail| X([Nothing is published])
+    D --> E[Report on the PR,<br/>rendered by default-branch code]
+  end
+```
+
+A coverage run (`unit-test-agent-sweep`) works the same way, started by hand, and has up to two passes:
+
+```mermaid
+flowchart LR
+  D([Manual start]) --> P1[Pass 1: every file with uncovered<br/>lines, branches or functions]
+  P1 --> G1{Gate}
+  G1 -->|pass| PR[One pull request<br/>+ measured report]
+  PR -->|gaps left| P2[Pass 2 on the same PR:<br/>only what is left, with pass 1's reasons]
+  P2 --> G2{Gate}
+  G2 -->|pass| R[Report updated:<br/>original code → final result]
+  PR -->|no gaps| R1[Report from pass 1]
+```
+
 ## Where things are
 
 | Path | Role | Used by |

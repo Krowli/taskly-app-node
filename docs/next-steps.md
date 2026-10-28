@@ -1,0 +1,60 @@
+# Limitations and next steps in detail
+
+The short version is in [SOLUTION.md](../SOLUTION.md). This file keeps the full lists.
+
+## All known limitations
+
+- gh-aw is in public preview; the workflows pin v0.93.5.
+- PRs from forks are not supported. PR code also runs before the agent (dependency install without scripts, client generation, the baseline run). That is acceptable only because only writers can trigger it.
+- A person with write access can edit the workflow files in a PR. The design protects against the agent and accidental edits, not against a malicious maintainer.
+- The push token is a long-lived personal token.
+- The gate runs untrusted test code in a network-less container. A test can forge the measurement files it writes. Trusted code checks only the patch and the shape of those files.
+- The pattern and weakening checks are line-based heuristics, not a sandbox.
+- Exceptions to "fails without the change" are the agent's own claims. The gate lists them in the report but cannot verify them.
+- "Fails without the change" counts every test in the test files the agent touched, so it shows that the patch's files detect the change, not which new test does.
+- Model output varies between runs, so the numbers in `docs/agent-runs/` are from single runs.
+- A coverage run only targets uncovered code. Weak tests that already cover code are not improved (planted bug B7 in [quality](agent-runs/quality.md)).
+- The AI threat scan can block a correct run when the PR itself contains injected text. That is safe, but nothing from that run is published.
+- Each run uses Copilot AI credits and GitHub Actions minutes. When the credits run out, the model returns HTTP 429 and the run fails until the allowance resets or a budget is set. See GitHub's terms for [Copilot](https://docs.github.com/en/copilot/concepts/billing/billing-for-individuals) and [Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+
+## All production changes
+
+| Change | Why | How |
+|---|---|---|
+| **GitHub App token and a required check run** | A personal token is long-lived and tied to one person, and a comment is not a merge gate | A short-lived App token for pushes; results as a check run with annotations, required by branch protection |
+| **Mutation testing as a tool for the agent** | Coverage shows that code ran; mutation testing shows that a test would catch a change to it | Stryker (`@stryker-mutator/core` + `@stryker-mutator/vitest-runner`), installed only under `tools/unit-test-agent`. Run with `--mutate` on the changed files and `--incremental`. Show surviving mutants to the agent as targets, and the score next to coverage |
+| **An independent reviewer** | Today the self-review is the same model judging its own work | A second, read-only agent on a different model applies the same checklist to the patch; its verdict appears in the report |
+| **The scenario set on every change** | Shows at once whether a change to the agent, a skill or the model made decisions worse | Re-run S1–S6 automatically and compare with the expected outcomes |
+| **A verdict per app** | Today one failing frontend test rejects the backend tests from the same run | Judge and publish backend and frontend patches separately |
+| **PRs from forks** | PR code runs in the agent job today | Move that step into a separate job with no secrets; delete agent instruction files a PR adds |
+| **The model by PR size** | Small diffs do not need the strongest model | Route small diffs to a smaller model, with one escalation after a weak result; see the estimate below |
+| **Apply by label** | Some teams want a human click before tests land | The verified patch is offered on the PR; a label commits it against the expected head commit |
+| **A file cap on very large PRs** | Keeps cost and time bounded | Largest changes first; the rest listed as follow-ups |
+| **An audit mode for existing tests** | A coverage run never revisits code that is already covered | An on-demand report of weak existing tests, as suggestions only |
+| **Dates under several time zones** | Logic based on the local date can break in other zones | Run date-related tests under several `TZ` values in the gate |
+| **CI hardening** | Cheap proof that the workflows are safe | `actionlint` and `zizmor` on workflows, a format check of agent tests in the gate, Dependabot with a cooldown for pinned actions |
+| **Organisation-billed model access** | Budgets per repository, no personal credentials | Organisation Copilot policy with per-repository budgets |
+| **One shared schema for limits** | The impact skill finds the same rule duplicated between backend, database, OpenAPI and frontend | Generate `openapi.json` and the frontend limits from the backend schema |
+
+## Cost on other models (estimate)
+
+All final runs together (coverage in two passes and S1–S6) used 71 K input, 96 K output, 6.8 M cache-read and 0.36 M cache-write tokens ([usage files](agent-runs/README.md)). Priced at [Copilot's per-model rates](https://docs.github.com/en/enterprise-cloud@latest/copilot/reference/copilot-billing/models-and-pricing):
+
+| Model | Same tokens would cost | |
+|---|---|---|
+| Claude Sonnet 5.5 (used) | **$2.68** | measured |
+| GPT-6 Astra | $16.79 | ×6.3 |
+| GPT-6.1 Terra | $1.34 | ×0.5 |
+| Gemini 3.8 Flash | $1.19 | ×0.44 |
+| Claude Haiku 5.5 | $0.17–0.84 | ×0.06–0.31, depending on whether a request is over 100 K tokens |
+| GPT-6 Luna | $0.17 | ×0.06 |
+
+This is an assumption, not a result: it supposes another model needs the same number of tokens. A weaker model usually takes more turns, and a patch the gate rejects is paid for and wasted, so a cheaper model can end up costing more. 96 % of the tokens are cache reads, so the cache-read price matters most.
+
+**How to check a cheaper model before switching.** Change `model:` in both workflows, then re-run the coverage run and S1–S6 on a copy of this repository. Switch only if all of these hold:
+- all six scenarios still pass their pre-written rules;
+- coverage is no lower;
+- the planted-bug count and mutation scores ([quality](agent-runs/quality.md)) are no lower;
+- the gate rejects no more runs.
+
+Compare the credits the runs actually used, not this estimate. A likely saving without risk: a small model for small PRs and for the threat scan (already the case), with the stronger one kept for coverage runs and large diffs.

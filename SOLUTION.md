@@ -28,6 +28,37 @@ flowchart LR
   end
 ```
 
+**One pull-request run, step by step:**
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor Dev as Developer
+  participant GH as GitHub
+  participant P as Prepare (no model)
+  participant A as Agent (sandbox)
+  participant G as Gate (no network)
+  participant R as Report (default branch)
+  Dev->>GH: opens or updates a PR that changes backend/ or frontend/
+  GH->>P: start the workflow
+  P->>P: base-branch tooling builds the manifest and a sanitized copy of the PR description
+  alt nothing testable
+    P-->>GH: no-op — the model never starts
+  else files need tests
+    P->>A: manifest, description, agent rules, skills
+    A->>A: decide per file → write tests → run them (gate rules, without the change, shuffled) → self-review → check its output
+    A->>G: one commit + structured output (decisions, justifications, questions)
+    G->>G: patch policy, typecheck, suites, repeats, fails-without-the-change, coverage, AI threat scan
+    alt verdict passes
+      G->>GH: push the test files to the PR branch, post the agent's comment
+    else verdict fails
+      G-->>GH: nothing is published
+    end
+    GH->>R: workflow_run
+    R->>GH: one sticky comment with the measured results
+  end
+```
+
 **What the gate checks.** These checks decide the verdict:
 - **Paths and patterns.** The patch touches test paths only. It has no forbidden patterns: network modules, `process.env`, `.only` / `.skip` / `.fails`, snapshots.
 - **No weakening.** Weakening patterns are rejected in any added test code: an early exit, assertions only inside a condition or a `catch`, a swallowed failure. These are line-based heuristics.

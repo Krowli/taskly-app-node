@@ -174,6 +174,7 @@ All limitations, with explanations: [next steps](docs/next-steps.md#all-known-li
   - a contract check: backend responses validated against `openapi.json`, frontend types generated from it (S4's drift).
 
   Each gets its own skill, so the agent also creates and updates these tests for a change.
+- **The team's wiki as a second specification:** a read-only MCP server for the wiki (the vendor's own, or a clone of a GitHub wiki) lets the agent find the business rule behind a change. When the wiki, the code and the PR description disagree, the agent asks with the page, its version and the code line, as in S4, and locks neither side in.
 - **A cheaper model for small PRs**, switched only after the scenario set and quality checks show no loss ([cost estimate](docs/next-steps.md#cost-on-other-models-estimate)).
 
 The full list, with why and how for each (also a verdict per app, fork PRs and an audit mode for existing tests): [next steps](docs/next-steps.md#all-production-changes).

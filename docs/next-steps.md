@@ -21,16 +21,18 @@ The short version is in [SOLUTION.md](../SOLUTION.md). This file keeps the full 
 
 | Change | Why | How |
 |---|---|---|
+| **Protected agent configuration** | A person with write access can change the workflows, the agent's instructions, the skills or the gate's rules in a PR. The design protects against the model and accidental edits, not against a dishonest maintainer | CODEOWNERS and required approval for `.github/workflows/**`, `.github/agents/**`, `.github/skills/**` and `tools/unit-test-agent/**`; protect the default branch and require CI before such changes merge |
 | **GitHub App token and a required check run** | A personal token is long-lived and tied to one person, and a comment is not a merge gate | A short-lived App token for pushes; results as a check run with annotations, required by branch protection |
 | **Mutation testing as a tool for the agent** | Coverage shows that code ran; mutation testing shows that a test would catch a change to it | Stryker (`@stryker-mutator/core` + `@stryker-mutator/vitest-runner`), installed only under `tools/unit-test-agent`. Run with `--mutate` on the changed files and `--incremental`. Show surviving mutants to the agent as targets, and the score next to coverage |
 | **An independent reviewer** | Today the self-review is the same model judging its own work | A second, read-only agent on a different model applies the same checklist to the patch; its verdict appears in the report |
+| **Enforce the skill plan** | The report shows which skills were loaded, but that is observed, not checked: the agent can skip a skill and still pass the gate | Map the changed app and file types to the skills they need; if the trusted session log does not show them, mark the result "needs review" instead of ready |
 | **The scenario set on every change** | Shows at once whether a change to the agent, a skill or the model made decisions worse | Re-run S1–S6 automatically and compare with the expected outcomes |
 | **A verdict per app** | Today one failing frontend test rejects the backend tests from the same run | Judge and publish backend and frontend patches separately |
 | **PRs from forks** | PR code runs in the agent job today | Move that step into a separate job with no secrets; delete agent instruction files a PR adds |
 | **The model by PR size** | Small diffs do not need the strongest model | Route small diffs to a smaller model, with one escalation after a weak result; see the estimate below |
 | **Apply by label** | Some teams want a human click before tests land | The verified patch is offered on the PR; a label commits it against the expected head commit |
 | **A file cap on very large PRs** | Keeps cost and time bounded | Largest changes first; the rest listed as follow-ups |
-| **An audit mode for existing tests** | A coverage run never revisits code that is already covered | An on-demand report of weak existing tests, as suggestions only |
+| **An audit mode for existing tests** | A coverage run never revisits code that is already covered, even when the tests there are weak (planted bug B7: equal `created_at` and `updated_at` in the fixture hid a swap) | An on-demand report of weak existing tests, as suggestions only: targeted mutation samples and fixture-diversity checks on covered code |
 | **Dates under several time zones** | Logic based on the local date can break in other zones | Run date-related tests under several `TZ` values in the gate |
 | **CI hardening** | Cheap proof that the workflows are safe | `actionlint` and `zizmor` on workflows, a format check of agent tests in the gate, Dependabot with a cooldown for pinned actions |
 | **Organisation-billed model access** | Budgets per repository, no personal credentials | Organisation Copilot policy with per-repository budgets |

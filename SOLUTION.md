@@ -163,11 +163,10 @@ All limitations, with explanations: [next steps](docs/next-steps.md#all-known-li
 ## What I would change for production
 
 - **A GitHub App token and a required check run** instead of a personal token and a comment.
+- **Protected agent configuration:** CODEOWNERS and required approval for `.github/workflows/**`, `.github/agents/**`, `.github/skills/**` and `tools/unit-test-agent/**`, with branch protection, so a writer cannot quietly change the rules that judge the agent.
 - **Mutation testing as feedback for the agent:** surviving mutants on changed files as targets, the score next to coverage.
 - **An independent reviewer** on a different model, applying the same checklist to the patch.
 - **The scenario set on every change** to the agent, a skill or the model, compared with the expected outcomes.
-- **A verdict per app**, so one failing frontend test does not reject good backend tests.
-- **Fork PRs** through a separate job with no secrets.
 - **A cheaper model for small PRs**, switched only after the scenario set and quality checks show no loss ([cost estimate](docs/next-steps.md#cost-on-other-models-estimate)).
 
-The full list, with why and how for each: [next steps](docs/next-steps.md#all-production-changes).
+The full list, with why and how for each (also a verdict per app, fork PRs and an audit mode for existing tests): [next steps](docs/next-steps.md#all-production-changes).

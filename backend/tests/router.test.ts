@@ -25,13 +25,20 @@ it('creates tasks with trimmed input and defaults', async () => {
   expect(response.body).toEqual(todo);
   expect(repository.create).toHaveBeenCalledWith({ title: 'Plan the sprint', description: '', priority: 'high', due_date: null, completed: false });
 });
-it.each([{ title: '  ' }, { title: 'x'.repeat(121) }, { title: 'Task', priority: 'urgent' }, { title: 'Task', due_date: '2026-02-30' }])(
+it.each([{ title: '  ' }, { title: 'x'.repeat(201) }, { title: 'Task', priority: 'urgent' }, { title: 'Task', due_date: '2026-02-30' }])(
   'rejects invalid create input without calling the repository: %j', async (payload) => {
     const { app, repository } = setup();
     expect((await request(app).post('/api/todos').send(payload)).status).toBe(422);
     expect(repository.create).not.toHaveBeenCalled();
   },
 );
+it('creates a task whose title is exactly 200 characters', async () => {
+  const { app, repository } = setup();
+  const title = 'x'.repeat(200);
+  const response = await request(app).post('/api/todos').send({ title });
+  expect(response.status).toBe(201);
+  expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({ title }));
+});
 it.each(['abc', '0', '-1', '1.5'])('rejects invalid id %s with 422', async (id) => {
   const { app, repository } = setup();
   expect((await request(app).get(`/api/todos/${id}`)).status).toBe(422);

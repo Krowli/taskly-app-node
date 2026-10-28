@@ -16,12 +16,25 @@ describe('todo validation', () => {
     expect(updateSchema.parse({ due_date: '2026-10-15' })).toEqual({ due_date: '2026-10-15' });
   });
   it.each([
-    {}, { title: '' }, { title: '  ' }, { title: 'x'.repeat(121) },
+    {}, { title: '' }, { title: '  ' }, { title: 'x'.repeat(201) },
     { title: 'Task', description: 'x'.repeat(2001) }, { title: 'Task', priority: 'urgent' },
     { title: 'Task', due_date: '2026-02-30' }, { title: 'Task', due_date: '2025-02-29' },
     { title: 'Task', due_date: '2026-10-15T12:00:00Z' }, { title: 'Task', completed: 'true' },
     { title: 'Task', completed: 1 }, { title: 'Task', id: 1 }, { title: null },
   ])('rejects invalid create input: %j', (input) => expect(createSchema.safeParse(input).success).toBe(false));
+  it('accepts titles of 121 and 200 characters on create and update', () => {
+    for (const length of [121, 200]) {
+      const title = 'x'.repeat(length);
+      expect(createSchema.parse({ title }).title).toBe(title);
+      expect(updateSchema.parse({ title })).toEqual({ title });
+    }
+  });
+  it('trims before measuring a 200 character title', () => {
+    expect(createSchema.parse({ title: ` ${'x'.repeat(200)} ` }).title).toBe('x'.repeat(200));
+  });
+  it('rejects a 201 character title on update', () => {
+    expect(updateSchema.safeParse({ title: 'x'.repeat(201) }).success).toBe(false);
+  });
   it('rejects empty patches', () => {
     expect(() => updateSchema.parse({})).toThrow('Provide at least one field');
   });

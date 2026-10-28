@@ -1,0 +1,69 @@
+{
+  "summary": "Raised-limit boundary tests added for title length (121, 200, 201) on create/update and the router; two existing 121-char rejection cases updated to 201 as the description intends. Stored 120-char limits elsewhere are reported.",
+  "decisions": [
+    {
+      "file": "backend/src/features/todos/validators.ts",
+      "action": "updated",
+      "testFiles": ["backend/tests/validators.test.ts", "backend/tests/router.test.ts"],
+      "reason": "Title max 120 -> 200: added accept 121/200, trim, reject 201 on update, router 201 for 200 chars; moved rejection case to 201."
+    }
+  ],
+  "impact": [
+    {
+      "changedFile": "backend/src/features/todos/validators.ts:4",
+      "relatedFile": "backend/prisma/schema.prisma",
+      "relatedLines": "14",
+      "kind": "persistence-or-docs",
+      "risk": "Title column is VarChar(120); a 121-200 character title now passes validation but the database rejects it, so saving fails with 500.",
+      "action": "reported-only"
+    },
+    {
+      "changedFile": "backend/src/features/todos/validators.ts:4",
+      "relatedFile": "backend/src/core/database.ts",
+      "relatedLines": "14",
+      "kind": "persistence-or-docs",
+      "risk": "Raw DDL creates title VARCHAR(120); existing and new tables keep the old limit, so long titles fail on insert.",
+      "action": "reported-only"
+    },
+    {
+      "changedFile": "backend/src/features/todos/validators.ts:4",
+      "relatedFile": "frontend/src/features/todos/utils/todos.ts",
+      "relatedLines": "9-10",
+      "kind": "duplicated-rule",
+      "risk": "Frontend still blocks titles over 120 characters with a 120-character message, so users cannot enter 121-200.",
+      "action": "reported-only"
+    },
+    {
+      "changedFile": "backend/src/features/todos/validators.ts:4",
+      "relatedFile": "backend/openapi.json",
+      "relatedLines": "170,206,246",
+      "kind": "api-contract",
+      "risk": "OpenAPI still documents title maxLength 120, so generated clients reject valid titles.",
+      "action": "reported-only"
+    },
+    {
+      "changedFile": "backend/src/features/todos/validators.ts:4",
+      "relatedFile": "frontend/src/lib/http.ts",
+      "relatedLines": "16",
+      "kind": "duplicated-rule",
+      "risk": "The 422 error message still says titles up to 120 characters.",
+      "action": "reported-only"
+    }
+  ],
+  "assertionChanges": [
+    {
+      "testFile": "backend/tests/validators.test.ts",
+      "testName": "todo validation rejects invalid create input",
+      "sourceRef": "backend/src/features/todos/validators.ts:4",
+      "why": "Over-limit title case changed from 121 to 201 characters because the max is now 200."
+    },
+    {
+      "testFile": "backend/tests/router.test.ts",
+      "testName": "rejects invalid create input without calling the repository",
+      "sourceRef": "backend/src/features/todos/validators.ts:4",
+      "why": "Over-limit title case changed from 121 to 201 characters because the max is now 200."
+    }
+  ],
+  "suspectedBugs": [],
+  "discardedTests": []
+}

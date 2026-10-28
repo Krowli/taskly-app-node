@@ -1,0 +1,251 @@
+{
+  "verdict": "ready",
+  "reason": "6 test files verified; 17 tests were already failing before the agent",
+  "pr": 3,
+  "headSha": "c6d9a9ed032b973016f34e7ea68acb7c04487080",
+  "runUrl": "https://github.com/Krowli/taskly-app-node/actions/runs/40765232093",
+  "gate": {
+    "runAgent": true,
+    "reason": "6 testable files changed, 0 uncovered changed lines, 17 failing tests"
+  },
+  "injectionSignals": [],
+  "agent": {
+    "decisions": [
+      {
+        "file": "backend/src/features/todos/repository.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/stats.test.ts"
+        ],
+        "reason": "stats() counts, active derivation and UTC start-of-today overdue boundary tested."
+      },
+      {
+        "file": "backend/src/features/todos/router.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/stats.test.ts"
+        ],
+        "reason": "GET /stats returns repository stats and is not routed as an id."
+      },
+      {
+        "file": "backend/src/features/todos/types.ts",
+        "action": "skipped",
+        "testFiles": [
+          "backend/tests/router.test.ts"
+        ],
+        "reason": "excluded from coverage; the router test fake only gained the new stats member for typecheck."
+      },
+      {
+        "file": "backend/openapi.json",
+        "action": "skipped",
+        "testFiles": [],
+        "reason": "contract file, not unit-testable"
+      },
+      {
+        "file": "frontend/src/features/todos/TodosPage.tsx",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/TodosPage.test.tsx",
+          "frontend/src/features/todos/TodosPage.interactions.test.tsx"
+        ],
+        "reason": "Stubbed TodoStats in existing page tests and added a test that the page renders it."
+      },
+      {
+        "file": "frontend/src/features/todos/api/queryKeys.ts",
+        "action": "skipped",
+        "testFiles": [
+          "frontend/src/features/todos/api/stats.test.ts"
+        ],
+        "reason": "excluded from coverage; the stats key is asserted in the hook test."
+      },
+      {
+        "file": "frontend/src/features/todos/api/todos.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/api/stats.test.ts"
+        ],
+        "reason": "stats() calls /todos/stats with the abort signal."
+      },
+      {
+        "file": "frontend/src/features/todos/hooks/useTodoStatsQuery.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/api/stats.test.ts"
+        ],
+        "reason": "hook caches data under todoKeys.stats."
+      },
+      {
+        "file": "frontend/src/features/todos/components/TodoStats.tsx",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/components/TodoStats.test.tsx"
+        ],
+        "reason": "loading, counts with labels, zeros and error states."
+      },
+      {
+        "file": "frontend/src/features/todos/types.ts",
+        "action": "skipped",
+        "testFiles": [],
+        "reason": "types only"
+      }
+    ],
+    "impact": [
+      {
+        "changedFile": "frontend/src/features/todos/api/queryKeys.ts",
+        "relatedFile": "frontend/src/features/todos/hooks/useCreateTodoMutation.ts",
+        "relatedLines": "13-14",
+        "kind": "cache-or-state",
+        "risk": "Create, update and delete only update the list cache; the stats query is never invalidated, so counts on the page stay stale until refetch after changing a task.",
+        "action": "reported-only"
+      }
+    ],
+    "assertionChanges": [
+      {
+        "testFile": "frontend/src/features/todos/TodosPage.test.tsx",
+        "testName": "displays a query failure and resets mutation errors before retrying",
+        "sourceRef": "frontend/src/features/todos/TodosPage.tsx:56",
+        "why": "TodosPage now renders TodoStats, which needs a QueryClient; the child is stubbed at file scope."
+      },
+      {
+        "testFile": "frontend/src/features/todos/TodosPage.interactions.test.tsx",
+        "testName": "shows no alert without errors",
+        "sourceRef": "frontend/src/features/todos/TodosPage.tsx:56",
+        "why": "TodoStats is stubbed because TodosPage now renders it and needs a QueryClient."
+      },
+      {
+        "testFile": "backend/tests/router.test.ts",
+        "testName": "lists tasks from the repository",
+        "sourceRef": "backend/src/features/todos/types.ts:18",
+        "why": "TodoStore gained stats(); the fake store in setup() needs it to typecheck."
+      }
+    ],
+    "suspectedBugs": [],
+    "discardedTests": [],
+    "skillsUsed": [
+      "analyzing-pr-changes",
+      "writing-backend-tests",
+      "writing-frontend-tests",
+      "running-unit-tests",
+      "analyzing-change-impact",
+      "reviewing-test-quality"
+    ],
+    "numTurns": null,
+    "costUsd": null,
+    "durationMs": null,
+    "resultSubtype": null,
+    "permissionDenials": 4,
+    "testRuns": {
+      "total": 8,
+      "failed": 2,
+      "lastPassed": true
+    },
+    "aiCredits": 41.6,
+    "model": "claude-sonnet-5.5",
+    "schemaErrors": []
+  },
+  "verification": {
+    "patch": {
+      "valid": true,
+      "files": [
+        "backend/tests/router.test.ts",
+        "backend/tests/stats.test.ts",
+        "frontend/src/features/todos/TodosPage.interactions.test.tsx",
+        "frontend/src/features/todos/TodosPage.test.tsx",
+        "frontend/src/features/todos/api/stats.test.ts",
+        "frontend/src/features/todos/components/TodoStats.test.tsx"
+      ],
+      "addedLines": 204,
+      "violations": [],
+      "assertionAudit": {
+        "changedExisting": 3,
+        "justified": 3,
+        "unjustified": []
+      }
+    },
+    "assertionAudit": {
+      "changedExisting": 3,
+      "justified": 3,
+      "unjustified": []
+    },
+    "typecheck": {
+      "backend": "pass",
+      "frontend": "pass"
+    },
+    "tests": {
+      "backend": {
+        "passed": 98,
+        "failed": 0,
+        "total": 98
+      },
+      "frontend": {
+        "passed": 131,
+        "failed": 0,
+        "total": 131
+      }
+    },
+    "requireAssertions": "pass",
+    "pinsChange": {
+      "applicable": true,
+      "newTests": 50,
+      "failingOnBase": 10
+    },
+    "failsWithoutChange": {
+      "required": true,
+      "met": true,
+      "failing": 10,
+      "total": 50,
+      "exceptions": [],
+      "unexcepted": [
+        "backend/src/features/todos/repository.ts",
+        "backend/src/features/todos/router.ts",
+        "frontend/src/features/todos/TodosPage.tsx",
+        "frontend/src/features/todos/api/todos.ts"
+      ]
+    },
+    "stability": {
+      "runs": 5,
+      "shuffled": true,
+      "flaky": []
+    },
+    "coverage": {
+      "before": {
+        "backend": {
+          "lines": 97.34,
+          "statements": 97.01,
+          "functions": 94.11,
+          "branches": 100
+        },
+        "frontend": {
+          "lines": 86.33,
+          "statements": 86.03,
+          "functions": 84.14,
+          "branches": 92.9
+        }
+      },
+      "after": {
+        "backend": {
+          "lines": 100,
+          "statements": 100,
+          "functions": 100,
+          "branches": 100
+        },
+        "frontend": {
+          "lines": 100,
+          "statements": 99.44,
+          "functions": 100,
+          "branches": 99.29
+        }
+      },
+      "changedLines": {
+        "before": {
+          "covered": 0,
+          "total": 0
+        },
+        "after": {
+          "covered": 39,
+          "total": 39
+        }
+      }
+    }
+  }
+}

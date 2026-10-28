@@ -1,0 +1,25 @@
+{
+  "summary": "Added tests for the stats repository method, route, API call, query hook, TodoStats component and its placement on the page. Fixed 17 existing page tests that broke because TodosPage now renders TodoStats (needs a QueryClient), plus a router fixture typecheck error.",
+  "decisions": [
+    {"file": "backend/src/features/todos/repository.ts", "action": "created", "testFiles": ["backend/tests/stats.test.ts"], "reason": "stats() counts, active derivation and UTC start-of-today overdue boundary tested."},
+    {"file": "backend/src/features/todos/router.ts", "action": "created", "testFiles": ["backend/tests/stats.test.ts"], "reason": "GET /stats returns repository stats and is not routed as an id."},
+    {"file": "backend/src/features/todos/types.ts", "action": "skipped", "testFiles": ["backend/tests/router.test.ts"], "reason": "excluded from coverage; the router test fake only gained the new stats member for typecheck."},
+    {"file": "backend/openapi.json", "action": "skipped", "testFiles": [], "reason": "contract file, not unit-testable"},
+    {"file": "frontend/src/features/todos/TodosPage.tsx", "action": "updated", "testFiles": ["frontend/src/features/todos/TodosPage.test.tsx", "frontend/src/features/todos/TodosPage.interactions.test.tsx"], "reason": "Stubbed TodoStats in existing page tests and added a test that the page renders it."},
+    {"file": "frontend/src/features/todos/api/queryKeys.ts", "action": "skipped", "testFiles": ["frontend/src/features/todos/api/stats.test.ts"], "reason": "excluded from coverage; the stats key is asserted in the hook test."},
+    {"file": "frontend/src/features/todos/api/todos.ts", "action": "created", "testFiles": ["frontend/src/features/todos/api/stats.test.ts"], "reason": "stats() calls /todos/stats with the abort signal."},
+    {"file": "frontend/src/features/todos/hooks/useTodoStatsQuery.ts", "action": "created", "testFiles": ["frontend/src/features/todos/api/stats.test.ts"], "reason": "hook caches data under todoKeys.stats."},
+    {"file": "frontend/src/features/todos/components/TodoStats.tsx", "action": "created", "testFiles": ["frontend/src/features/todos/components/TodoStats.test.tsx"], "reason": "loading, counts with labels, zeros and error states."},
+    {"file": "frontend/src/features/todos/types.ts", "action": "skipped", "testFiles": [], "reason": "types only"}
+  ],
+  "impact": [
+    {"changedFile": "frontend/src/features/todos/api/queryKeys.ts", "relatedFile": "frontend/src/features/todos/hooks/useCreateTodoMutation.ts", "relatedLines": "13-14", "kind": "cache-or-state", "risk": "Create, update and delete only update the list cache; the stats query is never invalidated, so counts on the page stay stale until refetch after changing a task.", "action": "reported-only"}
+  ],
+  "assertionChanges": [
+    {"testFile": "frontend/src/features/todos/TodosPage.test.tsx", "testName": "displays a query failure and resets mutation errors before retrying", "sourceRef": "frontend/src/features/todos/TodosPage.tsx:56", "why": "TodosPage now renders TodoStats, which needs a QueryClient; the child is stubbed at file scope."},
+    {"testFile": "frontend/src/features/todos/TodosPage.interactions.test.tsx", "testName": "shows no alert without errors", "sourceRef": "frontend/src/features/todos/TodosPage.tsx:56", "why": "TodoStats is stubbed because TodosPage now renders it and needs a QueryClient."},
+    {"testFile": "backend/tests/router.test.ts", "testName": "lists tasks from the repository", "sourceRef": "backend/src/features/todos/types.ts:18", "why": "TodoStore gained stats(); the fake store in setup() needs it to typecheck."}
+  ],
+  "suspectedBugs": [],
+  "discardedTests": []
+}

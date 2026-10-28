@@ -1,0 +1,40 @@
+{
+  "summary": "Continuation pass: covered the remaining gaps in factory.ts, TodoList.tsx, TodosPage.tsx and todos.ts. One guard in DeleteTodoDialog.tsx cannot be reached by a unit test.",
+  "decisions": [
+    {
+      "file": "backend/src/factory.ts",
+      "action": "created",
+      "testFiles": ["backend/tests/factory.headers-sent.test.ts"],
+      "reason": "Separate file because it needs a file-scope router mock; covers the headers-already-sent branch of the error handler (line 20)."
+    },
+    {
+      "file": "frontend/src/features/todos/components/TodoList.tsx",
+      "action": "created",
+      "testFiles": ["frontend/src/features/todos/components/TodoList.handlers.test.tsx"],
+      "reason": "Separate file because it needs a TodoItem stub that exposes the handlers; checks that toggle, edit and delete receive the clicked task and busy is passed down."
+    },
+    {
+      "file": "frontend/src/features/todos/TodosPage.tsx",
+      "action": "updated",
+      "testFiles": ["frontend/src/features/todos/TodosPage.interactions.test.tsx"],
+      "reason": "Added a test for a query with no data, which is treated as an empty list (line 18 branch)."
+    },
+    {
+      "file": "frontend/src/features/todos/utils/todos.ts",
+      "action": "updated",
+      "testFiles": ["frontend/src/features/todos/utils/todos.test.ts"],
+      "reason": "Added due-date sort tests with undated tasks on either side of the comparison (line 52 branch)."
+    },
+    {
+      "file": "frontend/src/features/todos/components/DeleteTodoDialog.tsx",
+      "action": "skipped",
+      "testFiles": [],
+      "reason": "Line 19 (if (pending) return) is a defensive guard; every control that calls remove() is disabled while pending, so no UI interaction reaches it.",
+      "noFailingTest": { "reason": "not-unit-testable", "detail": "The guard is unreachable through the rendered UI because the delete button is disabled while pending." }
+    }
+  ],
+  "impact": [],
+  "assertionChanges": [],
+  "suspectedBugs": [],
+  "discardedTests": []
+}

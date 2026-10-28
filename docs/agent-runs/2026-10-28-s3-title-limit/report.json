@@ -1,0 +1,201 @@
+{
+  "verdict": "ready",
+  "reason": "2 test files verified; 2 tests were already failing before the agent",
+  "pr": 4,
+  "headSha": "bd256f41bb9c67dfd8b039cd3a4919e4e552c5e6",
+  "runUrl": "https://github.com/Krowli/taskly-app-node/actions/runs/40765243039",
+  "gate": {
+    "runAgent": true,
+    "reason": "1 testable files changed, 0 uncovered changed lines, 2 failing tests"
+  },
+  "injectionSignals": [],
+  "agent": {
+    "decisions": [
+      {
+        "file": "backend/src/features/todos/validators.ts",
+        "action": "updated",
+        "testFiles": [
+          "backend/tests/validators.test.ts",
+          "backend/tests/router.test.ts"
+        ],
+        "reason": "Title max 120 -> 200: added accept 121/200, trim, reject 201 on update, router 201 for 200 chars; moved rejection case to 201."
+      }
+    ],
+    "impact": [
+      {
+        "changedFile": "backend/src/features/todos/validators.ts:4",
+        "relatedFile": "backend/prisma/schema.prisma",
+        "relatedLines": "14",
+        "kind": "persistence-or-docs",
+        "risk": "Title column is VarChar(120); a 121-200 character title now passes validation but the database rejects it, so saving fails with 500.",
+        "action": "reported-only"
+      },
+      {
+        "changedFile": "backend/src/features/todos/validators.ts:4",
+        "relatedFile": "backend/src/core/database.ts",
+        "relatedLines": "14",
+        "kind": "persistence-or-docs",
+        "risk": "Raw DDL creates title VARCHAR(120); existing and new tables keep the old limit, so long titles fail on insert.",
+        "action": "reported-only"
+      },
+      {
+        "changedFile": "backend/src/features/todos/validators.ts:4",
+        "relatedFile": "frontend/src/features/todos/utils/todos.ts",
+        "relatedLines": "9-10",
+        "kind": "duplicated-rule",
+        "risk": "Frontend still blocks titles over 120 characters with a 120-character message, so users cannot enter 121-200.",
+        "action": "reported-only"
+      },
+      {
+        "changedFile": "backend/src/features/todos/validators.ts:4",
+        "relatedFile": "backend/openapi.json",
+        "relatedLines": "170,206,246",
+        "kind": "api-contract",
+        "risk": "OpenAPI still documents title maxLength 120, so generated clients reject valid titles.",
+        "action": "reported-only"
+      },
+      {
+        "changedFile": "backend/src/features/todos/validators.ts:4",
+        "relatedFile": "frontend/src/lib/http.ts",
+        "relatedLines": "16",
+        "kind": "duplicated-rule",
+        "risk": "The 422 error message still says titles up to 120 characters.",
+        "action": "reported-only"
+      }
+    ],
+    "assertionChanges": [
+      {
+        "testFile": "backend/tests/validators.test.ts",
+        "testName": "todo validation rejects invalid create input",
+        "sourceRef": "backend/src/features/todos/validators.ts:4",
+        "why": "Over-limit title case changed from 121 to 201 characters because the max is now 200."
+      },
+      {
+        "testFile": "backend/tests/router.test.ts",
+        "testName": "rejects invalid create input without calling the repository",
+        "sourceRef": "backend/src/features/todos/validators.ts:4",
+        "why": "Over-limit title case changed from 121 to 201 characters because the max is now 200."
+      }
+    ],
+    "suspectedBugs": [],
+    "discardedTests": [],
+    "skillsUsed": [
+      "analyzing-pr-changes",
+      "writing-backend-tests",
+      "running-unit-tests",
+      "analyzing-change-impact",
+      "reviewing-test-quality"
+    ],
+    "numTurns": null,
+    "costUsd": null,
+    "durationMs": null,
+    "resultSubtype": null,
+    "permissionDenials": 0,
+    "testRuns": {
+      "total": 3,
+      "failed": 0,
+      "lastPassed": true
+    },
+    "aiCredits": 22.6,
+    "model": "claude-sonnet-5.5",
+    "schemaErrors": []
+  },
+  "verification": {
+    "patch": {
+      "valid": true,
+      "files": [
+        "backend/tests/router.test.ts",
+        "backend/tests/validators.test.ts"
+      ],
+      "addedLines": 22,
+      "violations": [],
+      "assertionAudit": {
+        "changedExisting": 2,
+        "justified": 2,
+        "unjustified": []
+      }
+    },
+    "assertionAudit": {
+      "changedExisting": 2,
+      "justified": 2,
+      "unjustified": []
+    },
+    "typecheck": {
+      "backend": "pass",
+      "frontend": "pass"
+    },
+    "tests": {
+      "backend": {
+        "passed": 95,
+        "failed": 0,
+        "total": 95
+      },
+      "frontend": {
+        "passed": 124,
+        "failed": 0,
+        "total": 124
+      }
+    },
+    "requireAssertions": "pass",
+    "pinsChange": {
+      "applicable": true,
+      "newTests": 50,
+      "failingOnBase": 3
+    },
+    "failsWithoutChange": {
+      "required": true,
+      "met": true,
+      "failing": 3,
+      "total": 50,
+      "exceptions": [],
+      "unexcepted": [
+        "backend/src/features/todos/validators.ts"
+      ]
+    },
+    "stability": {
+      "runs": 5,
+      "shuffled": true,
+      "flaky": []
+    },
+    "coverage": {
+      "before": {
+        "backend": {
+          "lines": 100,
+          "statements": 100,
+          "functions": 100,
+          "branches": 100
+        },
+        "frontend": {
+          "lines": 100,
+          "statements": 99.4,
+          "functions": 100,
+          "branches": 99.27
+        }
+      },
+      "after": {
+        "backend": {
+          "lines": 100,
+          "statements": 100,
+          "functions": 100,
+          "branches": 100
+        },
+        "frontend": {
+          "lines": 100,
+          "statements": 99.4,
+          "functions": 100,
+          "branches": 99.27
+        }
+      },
+      "changedLines": {
+        "before": {
+          "covered": 0,
+          "total": 0
+        },
+        "after": {
+          "covered": 1,
+          "total": 1
+        }
+      }
+    }
+  }
+}

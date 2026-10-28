@@ -1,0 +1,179 @@
+{
+  "verdict": "ready",
+  "reason": "4 test files verified",
+  "pr": null,
+  "headSha": "ff120c2ed863dbaee8455ad7ebd258c7e6e8fcf3",
+  "runUrl": "https://github.com/Krowli/taskly-app-node/actions/runs/40762950652",
+  "gate": {
+    "runAgent": true,
+    "reason": "coverage sweep"
+  },
+  "injectionSignals": [],
+  "agent": {
+    "decisions": [
+      {
+        "file": "backend/src/factory.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/factory.headers-sent.test.ts"
+        ],
+        "reason": "Separate file because it needs a file-scope router mock; covers the headers-already-sent branch of the error handler (line 20)."
+      },
+      {
+        "file": "frontend/src/features/todos/components/TodoList.tsx",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/components/TodoList.handlers.test.tsx"
+        ],
+        "reason": "Separate file because it needs a TodoItem stub that exposes the handlers; checks that toggle, edit and delete receive the clicked task and busy is passed down."
+      },
+      {
+        "file": "frontend/src/features/todos/TodosPage.tsx",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/TodosPage.interactions.test.tsx"
+        ],
+        "reason": "Added a test for a query with no data, which is treated as an empty list (line 18 branch)."
+      },
+      {
+        "file": "frontend/src/features/todos/utils/todos.ts",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/utils/todos.test.ts"
+        ],
+        "reason": "Added due-date sort tests with undated tasks on either side of the comparison (line 52 branch)."
+      },
+      {
+        "file": "frontend/src/features/todos/components/DeleteTodoDialog.tsx",
+        "action": "skipped",
+        "testFiles": [],
+        "reason": "Line 19 (if (pending) return) is a defensive guard; every control that calls remove() is disabled while pending, so no UI interaction reaches it.",
+        "noFailingTest": {
+          "reason": "not-unit-testable",
+          "detail": "The guard is unreachable through the rendered UI because the delete button is disabled while pending."
+        }
+      }
+    ],
+    "impact": [],
+    "assertionChanges": [],
+    "suspectedBugs": [],
+    "discardedTests": [],
+    "skillsUsed": [
+      "analyzing-pr-changes",
+      "writing-frontend-tests",
+      "writing-backend-tests",
+      "reviewing-test-quality"
+    ],
+    "numTurns": null,
+    "costUsd": null,
+    "durationMs": null,
+    "resultSubtype": null,
+    "permissionDenials": 6,
+    "testRuns": {
+      "total": 10,
+      "failed": 2,
+      "lastPassed": true
+    },
+    "aiCredits": 48,
+    "model": "claude-sonnet-5.5",
+    "schemaErrors": []
+  },
+  "verification": {
+    "patch": {
+      "valid": true,
+      "files": [
+        "backend/tests/factory.headers-sent.test.ts",
+        "frontend/src/features/todos/TodosPage.interactions.test.tsx",
+        "frontend/src/features/todos/components/TodoList.handlers.test.tsx",
+        "frontend/src/features/todos/utils/todos.test.ts"
+      ],
+      "addedLines": 118,
+      "violations": [],
+      "assertionAudit": {
+        "changedExisting": 0,
+        "justified": 0,
+        "unjustified": []
+      }
+    },
+    "assertionAudit": {
+      "changedExisting": 0,
+      "justified": 0,
+      "unjustified": []
+    },
+    "typecheck": {
+      "backend": "pass",
+      "frontend": "pass"
+    },
+    "tests": {
+      "backend": {
+        "passed": 91,
+        "failed": 0,
+        "total": 91
+      },
+      "frontend": {
+        "passed": 124,
+        "failed": 0,
+        "total": 124
+      }
+    },
+    "requireAssertions": "pass",
+    "pinsChange": {
+      "applicable": false,
+      "newTests": 0,
+      "failingOnBase": 0
+    },
+    "failsWithoutChange": {
+      "required": false,
+      "met": true,
+      "failing": 0,
+      "total": 0,
+      "exceptions": [
+        {
+          "file": "frontend/src/features/todos/components/DeleteTodoDialog.tsx",
+          "reason": "not-unit-testable",
+          "detail": "The guard is unreachable through the rendered UI because the delete button is disabled while pending."
+        }
+      ],
+      "unexcepted": []
+    },
+    "stability": {
+      "runs": 5,
+      "shuffled": true,
+      "flaky": []
+    },
+    "coverage": {
+      "before": {
+        "backend": {
+          "lines": 100,
+          "statements": 99.22,
+          "functions": 100,
+          "branches": 97.91
+        },
+        "frontend": {
+          "lines": 98.01,
+          "statements": 97.61,
+          "functions": 96.1,
+          "branches": 97.81
+        }
+      },
+      "after": {
+        "backend": {
+          "lines": 100,
+          "statements": 100,
+          "functions": 100,
+          "branches": 100
+        },
+        "frontend": {
+          "lines": 100,
+          "statements": 99.4,
+          "functions": 100,
+          "branches": 99.27
+        }
+      },
+      "changedLines": {
+        "before": null,
+        "after": null
+      }
+    }
+  }
+}

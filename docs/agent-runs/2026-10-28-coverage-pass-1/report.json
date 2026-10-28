@@ -1,0 +1,349 @@
+{
+  "verdict": "ready",
+  "reason": "21 test files verified",
+  "pr": null,
+  "headSha": "21ade401614648ff33508d505d0d6191e297dce5",
+  "runUrl": "https://github.com/Krowli/taskly-app-node/actions/runs/40760956190",
+  "gate": {
+    "runAgent": true,
+    "reason": "coverage sweep"
+  },
+  "injectionSignals": [],
+  "agent": {
+    "decisions": [
+      {
+        "file": "frontend/src/features/todos/utils/todos.ts",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/utils/todos.test.ts"
+        ],
+        "reason": "Added validateTodo, sort orders, isOverdue (midnight and month/year boundaries, fake timers) and formatDate tests."
+      },
+      {
+        "file": "frontend/src/features/todos/TodosPage.tsx",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/TodosPage.interactions.test.tsx"
+        ],
+        "reason": "New file because the existing test mocks children with different stubs; covers toggle, editor, delete flows and alerts."
+      },
+      {
+        "file": "backend/src/core/lifespan.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/lifespan.test.ts"
+        ],
+        "reason": "Database, config and app mocked at module boundary; covers startup, failures, signals, shutdown timeout."
+      },
+      {
+        "file": "frontend/src/lib/http.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/lib/http.test.ts"
+        ],
+        "reason": "fetch stubbed; covers headers, 204, network and abort errors, 422, detail fallbacks."
+      },
+      {
+        "file": "backend/src/factory.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/factory.test.ts"
+        ],
+        "reason": "App built with a fake database; covers routes, docs, 404, 422, 413 and 500 handlers."
+      },
+      {
+        "file": "frontend/src/features/todos/components/TodoEmptyState.tsx",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/components/TodoEmptyState.test.tsx"
+        ],
+        "reason": "Covers both copy variants and the disabled add button."
+      },
+      {
+        "file": "backend/src/features/todos/router.ts",
+        "action": "updated",
+        "testFiles": [
+          "backend/tests/router.test.ts"
+        ],
+        "reason": "Added id validation, get, patch, delete and 404 cases."
+      },
+      {
+        "file": "frontend/src/features/todos/hooks/useCreateTodoMutation.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/hooks/todosHooks.test.tsx"
+        ],
+        "reason": "Cache update, dedupe and failure covered."
+      },
+      {
+        "file": "backend/src/core/config.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/config.test.ts"
+        ],
+        "reason": "Env stubbed with module reload; covers override, scheme rewrite, built URL and each missing variable."
+      },
+      {
+        "file": "frontend/src/features/todos/hooks/useUpdateTodoMutation.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/hooks/todosHooks.test.tsx"
+        ],
+        "reason": "Cache replacement, no cache and failure covered."
+      },
+      {
+        "file": "frontend/src/features/todos/hooks/useDeleteTodoMutation.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/hooks/todosHooks.test.tsx"
+        ],
+        "reason": "Cache removal, no cache and failure covered."
+      },
+      {
+        "file": "frontend/src/features/todos/components/TodoList.tsx",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/components/TodoList.test.tsx"
+        ],
+        "reason": "Added failed, refetch-failed and item rendering states."
+      },
+      {
+        "file": "frontend/src/features/todos/api/todos.ts",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/api/todos.test.ts"
+        ],
+        "reason": "Added update and remove requests."
+      },
+      {
+        "file": "frontend/src/features/todos/hooks/useTodoFilters.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/hooks/useTodoFilters.test.ts"
+        ],
+        "reason": "Defaults, filter/search and sort covered."
+      },
+      {
+        "file": "frontend/src/features/todos/components/DeleteTodoDialog.tsx",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/components/DeleteTodoDialog.test.tsx"
+        ],
+        "reason": "Added success, failure and pending/busy cases."
+      },
+      {
+        "file": "frontend/src/app/AppProviders.tsx",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/app/AppProviders.test.tsx"
+        ],
+        "reason": "Default and custom query client."
+      },
+      {
+        "file": "backend/src/api/health.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/health.test.ts"
+        ],
+        "reason": "Success and database failure."
+      },
+      {
+        "file": "frontend/src/features/todos/components/TodoEditor.tsx",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/components/TodoEditor.test.tsx"
+        ],
+        "reason": "Added edit, failure and busy/pending cases."
+      },
+      {
+        "file": "frontend/src/features/todos/components/TodoForm.tsx",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/components/TodoForm.test.tsx"
+        ],
+        "reason": "Added initial values, trimming, errors, cancel and busy."
+      },
+      {
+        "file": "frontend/src/features/todos/components/TodoItem.tsx",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/features/todos/components/TodoItem.test.tsx"
+        ],
+        "reason": "Added completed, handlers, busy and overdue boundaries."
+      },
+      {
+        "file": "frontend/src/hooks/useNotice.ts",
+        "action": "updated",
+        "testFiles": [
+          "frontend/src/hooks/useNotice.test.ts"
+        ],
+        "reason": "4 second expiry, timer restart and stable callback."
+      },
+      {
+        "file": "frontend/src/features/todos/hooks/useTodosQuery.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/hooks/todosHooks.test.tsx"
+        ],
+        "reason": "Success with abort signal, and error."
+      },
+      {
+        "file": "backend/src/main.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/main.test.ts"
+        ],
+        "reason": "lifespan mocked; covers start and failure exit code."
+      },
+      {
+        "file": "backend/src/core/database.ts",
+        "action": "created",
+        "testFiles": [
+          "backend/tests/database.test.ts"
+        ],
+        "reason": "Client creation without connecting, and table creation statement."
+      },
+      {
+        "file": "frontend/src/features/todos/hooks/useTodosBusy.ts",
+        "action": "created",
+        "testFiles": [
+          "frontend/src/features/todos/hooks/todosHooks.test.tsx"
+        ],
+        "reason": "Idle, busy during a pending mutation, idle after."
+      }
+    ],
+    "impact": [],
+    "assertionChanges": [],
+    "suspectedBugs": [],
+    "discardedTests": [],
+    "skillsUsed": [
+      "analyzing-pr-changes",
+      "writing-backend-tests",
+      "running-unit-tests",
+      "writing-frontend-tests",
+      "reviewing-test-quality"
+    ],
+    "numTurns": null,
+    "costUsd": null,
+    "durationMs": null,
+    "resultSubtype": null,
+    "permissionDenials": 10,
+    "testRuns": {
+      "total": 16,
+      "failed": 3,
+      "lastPassed": true
+    },
+    "aiCredits": 116.5,
+    "model": "claude-sonnet-5.5",
+    "schemaErrors": []
+  },
+  "verification": {
+    "patch": {
+      "valid": true,
+      "files": [
+        "backend/tests/config.test.ts",
+        "backend/tests/database.test.ts",
+        "backend/tests/factory.test.ts",
+        "backend/tests/health.test.ts",
+        "backend/tests/lifespan.test.ts",
+        "backend/tests/main.test.ts",
+        "backend/tests/router.test.ts",
+        "frontend/src/app/AppProviders.test.tsx",
+        "frontend/src/features/todos/TodosPage.interactions.test.tsx",
+        "frontend/src/features/todos/api/todos.test.ts",
+        "frontend/src/features/todos/components/DeleteTodoDialog.test.tsx",
+        "frontend/src/features/todos/components/TodoEditor.test.tsx",
+        "frontend/src/features/todos/components/TodoEmptyState.test.tsx",
+        "frontend/src/features/todos/components/TodoForm.test.tsx",
+        "frontend/src/features/todos/components/TodoItem.test.tsx",
+        "frontend/src/features/todos/components/TodoList.test.tsx",
+        "frontend/src/features/todos/hooks/todosHooks.test.tsx",
+        "frontend/src/features/todos/hooks/useTodoFilters.test.ts",
+        "frontend/src/features/todos/utils/todos.test.ts",
+        "frontend/src/hooks/useNotice.test.ts",
+        "frontend/src/lib/http.test.ts"
+      ],
+      "addedLines": 1504,
+      "violations": [],
+      "assertionAudit": {
+        "changedExisting": 0,
+        "justified": 0,
+        "unjustified": []
+      }
+    },
+    "assertionAudit": {
+      "changedExisting": 0,
+      "justified": 0,
+      "unjustified": []
+    },
+    "typecheck": {
+      "backend": "pass",
+      "frontend": "pass"
+    },
+    "tests": {
+      "backend": {
+        "passed": 90,
+        "failed": 0,
+        "total": 90
+      },
+      "frontend": {
+        "passed": 120,
+        "failed": 0,
+        "total": 120
+      }
+    },
+    "requireAssertions": "pass",
+    "pinsChange": {
+      "applicable": false,
+      "newTests": 0,
+      "failingOnBase": 0
+    },
+    "failsWithoutChange": {
+      "required": false,
+      "met": true,
+      "failing": 0,
+      "total": 0,
+      "exceptions": [],
+      "unexcepted": []
+    },
+    "stability": {
+      "runs": 5,
+      "shuffled": true,
+      "flaky": []
+    },
+    "coverage": {
+      "before": {
+        "backend": {
+          "lines": 33.02,
+          "statements": 30.23,
+          "functions": 40.62,
+          "branches": 33.33
+        },
+        "frontend": {
+          "lines": 47.68,
+          "statements": 46.42,
+          "functions": 40.25,
+          "branches": 43.79
+        }
+      },
+      "after": {
+        "backend": {
+          "lines": 100,
+          "statements": 99.22,
+          "functions": 100,
+          "branches": 97.91
+        },
+        "frontend": {
+          "lines": 98.01,
+          "statements": 97.61,
+          "functions": 96.1,
+          "branches": 97.81
+        }
+      },
+      "changedLines": {
+        "before": null,
+        "after": null
+      }
+    }
+  }
+}

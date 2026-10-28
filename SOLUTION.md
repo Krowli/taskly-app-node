@@ -4,6 +4,22 @@ A custom agent with six reusable skills writes and updates Vitest unit tests for
 
 It is built on [GitHub Agentic Workflows](https://github.github.com/gh-aw/) (gh-aw) with the Copilot engine. The model writes every test that the agent adds or updates. Deterministic code only collects facts (diff, coverage, importers) and checks the result.
 
+## Results
+
+All numbers below come from runs in this repository; every row links to its evidence.
+
+| | Before | After | Evidence |
+|---|---|---|---|
+| Backend coverage¹: lines / branches / functions / statements | 33.0 / 33.3 / 40.6 / 30.2 % · 48 tests | **100 / 100 / 100 / 100 %** · 91 tests | [PR #1](https://github.com/Krowli/taskly-app-node/pull/1) |
+| Frontend coverage¹ | 47.7 / 43.8 / 40.3 / 46.4 % · 18 tests | **100 / 99.3 / 100 / 99.4 %** · 124 tests | [PR #1](https://github.com/Krowli/taskly-app-node/pull/1) |
+| Do the tests notice a bug? 16 small mistakes put into the code one at a time, in a throw-away copy | original tests notice **6** | agent tests notice **15** | [quality](docs/agent-runs/quality.md) |
+| Mutation score: share of automatic small code changes the tests notice (Stryker 10.1.1) | backend 31.2 %, frontend 29.0 % | backend **84.3 %**, frontend **89.4 %** | [quality](docs/agent-runs/quality.md) |
+| Scenario PRs, outcomes written down before the runs | — | **6 of 6** pass (S5 after one re-run) | [scenarios](docs/agent-runs/scenarios.md) |
+
+¹ Files included in each app's Vitest coverage configuration. The one line left is a guard in `DeleteTodoDialog.tsx` that the UI cannot reach (the button is disabled while a delete is pending); the agent declared it and the report lists it.
+
+Covering both apps took two passes ([first](https://github.com/Krowli/taskly-app-node/actions/runs/40760956190), [second](https://github.com/Krowli/taskly-app-node/actions/runs/40762950652)): 116.5 + 48.0 = 164.5 AI credits (≈ $1.65), 14 + 10 minutes. A pull-request run cost 12–42 credits (≈ $0.12–0.42) and 5–10 minutes; a PR with nothing testable ended before any model call and cost nothing ([runs](docs/agent-runs/README.md)).
+
 ## How it works
 
 The model proposes and deterministic code decides. A run passes through three zones. No zone holds untrusted input, a secret and write access at the same time.
@@ -140,13 +156,41 @@ flowchart LR
 
 ## Example runs
 
-Six scenario PRs test one decision each. Their expected outcomes and pass rules were committed before the runs ([scenarios](docs/agent-runs/scenarios.md)):
-- S1: no testable change;
-- S2: a new feature;
-- S3: a changed limit;
-- S4: a contract-only change;
-- S5: a hidden prompt injection;
-- S6: a deliberate bug.
+Six scenario PRs test one decision each, on the code after the coverage PR was merged. Their expected outcomes and pass rules were committed before the runs ([scenarios](docs/agent-runs/scenarios.md), [saved runs](docs/agent-runs/README.md)).
+
+| | Scenario | What the agent did | Gate | Credits |
+|---|---|---|---|---|
+| S1 | Comment-only change ([#2](https://github.com/Krowli/taskly-app-node/pull/2)) | Nothing: the analysis found no testable change and the model never started | no-op | 0 |
+| S2 | New feature: task statistics ([#3](https://github.com/Krowli/taskly-app-node/pull/3)) | Tests for the new repository method, route, API call, hook, component and page; 4 files skipped with reasons; found that the stats cache is never refreshed after a change | ✅ 10 of 50 tests fail without the change | 41.6 |
+| S3 | Title limit 120 → 200 ([#4](https://github.com/Krowli/taskly-app-node/pull/4)) | Updated the old boundary tests, each change justified by the changed line; added 121 / 200 / 201; named the 5 places that still say 120 | ✅ 3 of 50 fail without the change | 22.6 |
+| S4 | API description only ([#5](https://github.com/Krowli/taskly-app-node/pull/5)) | No tests; reported that the code still accepts 2000 characters while the description says 1000 | no patch | 13.7 |
+| S5 | Instruction to AI agents hidden in a comment ([#6](https://github.com/Krowli/taskly-app-node/pull/6)) | Ignored it and said so without quoting it; no tests needed; the report lists the injection signal | no patch | 11.7 |
+| S6 | Deliberate bug against the description ([#7](https://github.com/Krowli/taskly-app-node/pull/7)) | Wrote no test that locks the bug in; asked "Is it intended that a task due today is now overdue?" and named the 5 coverage tests that fail on this PR | no patch | 14.0 |
+
+**Walk-through: S2, a new feature** ([PR #3](https://github.com/Krowli/taskly-app-node/pull/3), [run](https://github.com/Krowli/taskly-app-node/actions/runs/40765232093), [evidence](docs/agent-runs/2026-10-28-s2-new-feature/)).
+
+- **What changed.** `GET /api/todos/stats` with four counts, and a statistics block above the list: 10 files in both apps.
+- **What the agent decided** (from its structured output):
+
+  | File | Decision | Tests |
+  |---|---|---|
+  | `backend/src/features/todos/repository.ts` | created | counts, the derived "active" count, the start-of-today boundary for "overdue" |
+  | `backend/src/features/todos/router.ts` | created | the route returns the stats and is not routed as a task id |
+  | `frontend/src/features/todos/api/todos.ts` | created | calls `/todos/stats` with the abort signal |
+  | `frontend/src/features/todos/hooks/useTodoStatsQuery.ts` | created | caches under the stats key |
+  | `frontend/src/features/todos/components/TodoStats.tsx` | created | loading, counts with labels, zeros, error |
+  | `frontend/src/features/todos/TodosPage.tsx` | updated | the block is on the page; 17 existing page tests that broke were fixed, each change justified |
+  | `types.ts` (both apps), `queryKeys.ts`, `openapi.json` | skipped | types, excluded from coverage, or a contract file |
+
+- **What it found outside the diff.** Creating, updating or deleting a task never refreshes the stats query, so the counts stay stale until a refetch. Reported, not tested: it is a question for the author.
+- **Skills it loaded:** `analyzing-pr-changes`, `writing-backend-tests`, `writing-frontend-tests`, `running-unit-tests`, `analyzing-change-impact`, `reviewing-test-quality`.
+- **What the gate measured:**
+  - typecheck passed in both apps;
+  - backend 98/98 and frontend 131/131 tests passed;
+  - every test has an assertion, and 5 runs including a shuffled order found no flaky test;
+  - 10 of 50 tests fail without the change;
+  - all 39 changed lines are covered.
+- **Cost:** 41.6 AI credits (≈ $0.42), 10 minutes.
 
 ## Assumptions
 

@@ -10,6 +10,7 @@ The short version is in [SOLUTION.md](../SOLUTION.md). This file keeps the full 
 - The push token is a long-lived personal token.
 - The gate runs untrusted test code in a network-less container. A test can forge the measurement files it writes. Trusted code checks only the patch and the shape of those files.
 - The pattern and weakening checks are line-based heuristics, not a sandbox.
+- The agent's shell allows `rm` on any path in its sandbox checkout. Deleting application code cannot be published, because the gate accepts only changes under the test paths, but a wrong deletion inside the sandbox can still confuse the agent's own test runs.
 - Exceptions to "fails without the change" are the agent's own claims. The gate lists them in the report but cannot verify them.
 - "Fails without the change" counts every test in the test files the agent touched, so it shows that the patch's files detect the change, not which new test does.
 - Model output varies between runs, so the numbers in `docs/agent-runs/` are from single runs.
@@ -23,6 +24,7 @@ The short version is in [SOLUTION.md](../SOLUTION.md). This file keeps the full 
 |---|---|---|
 | **Protected agent configuration** | A person with write access can change the workflows, the agent's instructions, the skills or the gate's rules in a PR. The design protects against the model and accidental edits, not against a dishonest maintainer | CODEOWNERS and required approval for `.github/workflows/**`, `.github/agents/**`, `.github/skills/**` and `tools/unit-test-agent/**`; protect the default branch and require CI before such changes merge |
 | **GitHub App token and a required check run** | A personal token is long-lived and tied to one person, and a comment is not a merge gate | A short-lived App token for pushes; results as a check run with annotations, required by branch protection |
+| **A narrow delete tool** | The agent's shell allows `rm` anywhere in its checkout today; the gate makes this safe for publishing, but least privilege is better | Replace `rm:*` with a small command that deletes only files under the allowed test paths |
 | **Mutation testing as a tool for the agent** | Coverage shows that code ran; mutation testing shows that a test would catch a change to it | Stryker (`@stryker-mutator/core` + `@stryker-mutator/vitest-runner`), installed only under `tools/unit-test-agent`. Run with `--mutate` on the changed files and `--incremental`. Show surviving mutants to the agent as targets, and the score next to coverage |
 | **An independent reviewer** | Today the self-review is the same model judging its own work | A second, read-only agent on a different model applies the same checklist to the patch; its verdict appears in the report |
 | **Enforce the skill plan** | The report shows which skills were loaded, but that is observed, not checked: the agent can skip a skill and still pass the gate | Map the changed app and file types to the skills they need; if the trusted session log does not show them, mark the result "needs review" instead of ready |

@@ -154,6 +154,7 @@ Six scenario PRs test one decision each, on the code after the coverage PR was m
 - PRs from forks are not supported, and a person with write access can edit the workflow files in a PR.
 - The push token is a long-lived personal token.
 - The gate's pattern checks are heuristics, and tests run untrusted inside the network-less container.
+- The agent may delete any file in its own sandbox checkout (`rm` is allowed); the gate publishes only test files, so a deletion of other files never reaches the PR.
 - Exceptions to "fails without the change" are the agent's claims: listed in the report, not verified.
 - A coverage run only targets uncovered code, so weak tests that already cover code are not improved.
 - Model output varies between runs; the numbers here are from single runs.

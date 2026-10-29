@@ -38,6 +38,7 @@ vi.mock('./components/TodoFilters', () => ({
     </p>
   ),
 }))
+vi.mock('./components/TodoStats', () => ({ TodoStats: () => null }))
 vi.mock('./components/TodoList', () => ({
   TodoList: (props: {
     todos: Todo[]
